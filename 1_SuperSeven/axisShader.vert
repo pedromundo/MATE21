@@ -1,7 +1,7 @@
 attribute vec3 aPosition;
-attribute vec3 aColor;
+attribute vec4 aColor;
 
-varying vec3 vColor;
+varying vec4 vColor;
 
 void main() {        
     gl_Position = ftransform();
