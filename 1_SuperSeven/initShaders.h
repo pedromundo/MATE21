@@ -11,13 +11,13 @@
 #define BUFFER_OFFSET(offset) ((GLvoid *)(offset))
 
 typedef struct Shader {
-  const char *filename;
+  const GLchar *filename;
   GLenum type;
   GLchar *source;
 } tShader;
 
-static char *readShaderSource(const char *shaderFile);
+static GLchar *readShaderSource(const GLchar *shaderFile);
 
-GLuint InitShader(const char *vShaderFile, const char *fShaderFile);
+GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile);
 
 #endif //__INIT_SHADERS__

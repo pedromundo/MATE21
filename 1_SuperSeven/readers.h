@@ -1,5 +1,6 @@
-void readModel3DS(char *filename, vector <Object*> &model3D);
+#include <GL/gl.h>
+void readModel3DS(GLchar *filename, vector<Object *> &model3D);
 
-void readModelOBJ(char *filename, vector <Object*> &model3D);
+void readModelOBJ(GLchar *filename, vector<Object *> &model3D);
 
-void readModelPLG(char *filename, vector <Object*> &model3D);
+void readModelPLG(GLchar *filename, vector<Object *> &model3D);

@@ -11,7 +11,7 @@
 /* ************************************************************************* */
 
 // Create a NULL-terminated string by reading the provided file
-static char *readShaderSource(const char *shaderFile) {
+static GLchar *readShaderSource(const GLchar *shaderFile) {
 
   FILE *fp = fopen(shaderFile, "r");
 
@@ -20,10 +20,10 @@ static char *readShaderSource(const char *shaderFile) {
   }
 
   fseek(fp, 0L, SEEK_END);
-  long size = ftell(fp);
+  GLint64 size = ftell(fp);
 
   fseek(fp, 0L, SEEK_SET);
-  char *buf = new char[size + 1];
+  GLchar *buf = new GLchar[size + 1];
   fread(buf, 1, size, fp);
 
   buf[size] = '\0';
@@ -37,14 +37,14 @@ static char *readShaderSource(const char *shaderFile) {
 /* ************************************************************************* */
 
 // Create a GLSL program object from vertex and fragment shader files
-GLuint InitShader(const char *vShaderFile, const char *fShaderFile) {
+GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile) {
 
   tShader shaders[2] = {{vShaderFile, GL_VERTEX_SHADER, NULL},
                         {fShaderFile, GL_FRAGMENT_SHADER, NULL}};
 
   GLuint program = glCreateProgram();
 
-  for (int i = 0; i < 2; ++i) {
+  for (GLint i = 0; i < 2; ++i) {
     Shader &s = shaders[i];
     s.source = readShaderSource(s.filename);
     if (shaders[i].source == NULL) {
@@ -84,7 +84,7 @@ GLuint InitShader(const char *vShaderFile, const char *fShaderFile) {
     std::cerr << "Shader program failed to link" << std::endl;
     GLint logSize;
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logSize);
-    char *logMsg = new char[logSize];
+    GLchar *logMsg = new GLchar[logSize];
     glGetProgramInfoLog(program, logSize, NULL, logMsg);
     std::cerr << logMsg << std::endl;
     delete[] logMsg;

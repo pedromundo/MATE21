@@ -11,28 +11,30 @@
 
 #include <GL/glut.h>
 
-#include "initShaders.h"
 #include "myDataStructures.h"
 #include "readers.h"
 
 using namespace std;
 
-vector <Object*>	model3D;
+vector<Object *> model3D;
 
 GLuint axisShader;
 
 GLuint axisVBO[3];
-GLuint 	modelVBO[2];
+GLuint modelVBO[3];
 
-Point 	bbMin		= { FLT_MAX, FLT_MAX, FLT_MAX},
-        bbMax		= { FLT_MIN, FLT_MIN, FLT_MIN},
-        bbCenter	= {0.0, 0.0, 0.0};
+GLfloat *colors;
 
-int winWdth = 1024, winHeight = 768;
+Point bbMin = {FLT_MAX, FLT_MAX, FLT_MAX}, bbMax = {FLT_MIN, FLT_MIN, FLT_MIN},
+      bbCenter = {0.0, 0.0, 0.0};
 
-bool drawRef = true, run = false;
+GLint winWdth = 1024, winHeight = 768;
 
-float rotX = 0.0f, rotY = 0.0f;
+GLboolean drawRef = true, run = true, spin = false, randomcolors = false;
+
+GLfloat rotX = 0.0f, rotY = 0.0f;
+
+GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile);
 
 /// ***********************************************************************
 /// **
@@ -42,11 +44,11 @@ void criaVBO() {
 
   ObjectVA axis_VA;
 
-  axis_VA.vFace = (unsigned int *)malloc(4 * 1 * sizeof(unsigned int));
+  axis_VA.vFace = (GLuint *)malloc(4 * 1 * sizeof(GLuint));
   if (!axis_VA.vFace)
     exit(-1);
 
-  axis_VA.vPoint = (float *)malloc(4 * 3 * sizeof(float));
+  axis_VA.vPoint = (GLfloat *)malloc(4 * 3 * sizeof(GLfloat));
   if (!axis_VA.vPoint)
     exit(-1);
 
@@ -71,7 +73,7 @@ void criaVBO() {
   axis_VA.vPoint[10] = -1.0;
   axis_VA.vPoint[11] = 0.0;
 
-  axis_VA.vColor = (float *)malloc(4 * 4 * sizeof(float));
+  axis_VA.vColor = (GLfloat *)malloc(4 * 4 * sizeof(GLfloat));
   if (!axis_VA.vColor)
     exit(-1);
 
@@ -101,92 +103,116 @@ void criaVBO() {
   glGenBuffers(3, axisVBO);
 
   glBindBuffer(GL_ARRAY_BUFFER, axisVBO[0]);
-  glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), axis_VA.vPoint,
+  glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(GLfloat), axis_VA.vPoint,
                GL_STATIC_DRAW);
 
   glBindBuffer(GL_ARRAY_BUFFER, axisVBO[1]);
-  glBufferData(GL_ARRAY_BUFFER, 4 * 4 * sizeof(float), axis_VA.vColor,
+  glBufferData(GL_ARRAY_BUFFER, 4 * 4 * sizeof(GLfloat), axis_VA.vColor,
                GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axisVBO[2]);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * 1 * sizeof(unsigned int),
-               axis_VA.vFace, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * 1 * sizeof(GLuint), axis_VA.vFace,
+               GL_STATIC_DRAW);
 
   free(axis_VA.vPoint);
   free(axis_VA.vColor);
   free(axis_VA.vFace);
 }
 
+void generateColors() {
+  colors = (GLfloat *)malloc(4 * model3D[0]->vPoint.size() * sizeof(GLfloat));
+
+  for (GLuint var = 0; var < 4 * model3D[0]->vPoint.size(); ++var) {
+    colors[var] = (GLfloat)random() / RAND_MAX;
+  }
+}
+
 void buildModel() {
 
-ObjectVA model3D_VA;
-unsigned int f, iv, v;
-Point massCenter = {0.0, 0.0, 0.0};
+  ObjectVA model3D_VA;
+  GLuint f, iv, v;
+  Point massCenter = {0.0, 0.0, 0.0};
 
-    int totFaces=0, totVertices=0;
+  model3D_VA.vPoint =
+      (GLfloat *)malloc(model3D[0]->vPoint.size() * 3 * sizeof(GLfloat));
+  if (!model3D_VA.vPoint)
+    exit(0);
 
-    model3D_VA.vPoint 	= (float *) malloc(model3D[0]->vPoint.size()*3*sizeof(float));
-    if (!model3D_VA.vPoint)
-        exit(0);
+  model3D_VA.vFace =
+      (GLuint *)malloc(model3D[0]->vFace.size() * 3 * sizeof(GLuint));
+  if (!model3D_VA.vFace)
+    exit(0);
 
-    model3D_VA.vFace 	= (unsigned int *) malloc(model3D[0]->vFace.size()*3*sizeof(unsigned int));
-    if (!model3D_VA.vFace)
-        exit(0);
+  for (v = 0; v < model3D[0]->vPoint.size(); v++) {
+    model3D_VA.vPoint[v * 3 + 0] = model3D[0]->vPoint[v]->pto.x;
+    model3D_VA.vPoint[v * 3 + 1] = model3D[0]->vPoint[v]->pto.y;
+    model3D_VA.vPoint[v * 3 + 2] = model3D[0]->vPoint[v]->pto.z;
+    if (model3D[0]->vPoint[v]->pto.x > bbMax.x)
+      bbMax.x = model3D[0]->vPoint[v]->pto.x;
+    if (model3D[0]->vPoint[v]->pto.x < bbMin.x)
+      bbMin.x = model3D[0]->vPoint[v]->pto.x;
+    if (model3D[0]->vPoint[v]->pto.y > bbMax.y)
+      bbMax.y = model3D[0]->vPoint[v]->pto.y;
+    if (model3D[0]->vPoint[v]->pto.y < bbMin.y)
+      bbMin.y = model3D[0]->vPoint[v]->pto.y;
+    if (model3D[0]->vPoint[v]->pto.z > bbMax.z)
+      bbMax.z = model3D[0]->vPoint[v]->pto.z;
+    if (model3D[0]->vPoint[v]->pto.z < bbMin.z)
+      bbMin.z = model3D[0]->vPoint[v]->pto.z;
+    massCenter.x += model3D[0]->vPoint[v]->pto.x;
+    massCenter.y += model3D[0]->vPoint[v]->pto.y;
+    massCenter.z += model3D[0]->vPoint[v]->pto.z;
+  }
 
-    for (v = 0 ; v < model3D[0]->vPoint.size() ; v++ ) {
-        model3D_VA.vPoint[v*3+0] = model3D[0]->vPoint[v]->pto.x;
-        model3D_VA.vPoint[v*3+1] = model3D[0]->vPoint[v]->pto.y;
-        model3D_VA.vPoint[v*3+2] = model3D[0]->vPoint[v]->pto.z;
-        if (model3D[0]->vPoint[v]->pto.x > bbMax.x)
-            bbMax.x = model3D[0]->vPoint[v]->pto.x;
-        if (model3D[0]->vPoint[v]->pto.x < bbMin.x)
-            bbMin.x = model3D[0]->vPoint[v]->pto.x;
-        if (model3D[0]->vPoint[v]->pto.y > bbMax.y)
-            bbMax.y = model3D[0]->vPoint[v]->pto.y;
-        if (model3D[0]->vPoint[v]->pto.y < bbMin.y)
-            bbMin.y = model3D[0]->vPoint[v]->pto.y;
-        if (model3D[0]->vPoint[v]->pto.z > bbMax.z)
-            bbMax.z = model3D[0]->vPoint[v]->pto.z;
-        if (model3D[0]->vPoint[v]->pto.z < bbMin.z)
-            bbMin.z = model3D[0]->vPoint[v]->pto.z;
-        massCenter.x += model3D[0]->vPoint[v]->pto.x;
-        massCenter.y += model3D[0]->vPoint[v]->pto.y;
-        massCenter.z += model3D[0]->vPoint[v]->pto.z;
-        }
+  massCenter.x /= model3D[0]->vPoint.size();
+  massCenter.y /= model3D[0]->vPoint.size();
+  massCenter.z /= model3D[0]->vPoint.size();
 
-    massCenter.x /= model3D[0]->vPoint.size();
-    massCenter.y /= model3D[0]->vPoint.size();
-    massCenter.z /= model3D[0]->vPoint.size();
+  for (f = 0; f < model3D[0]->vFace.size(); f++) {
+    for (iv = 0; iv < 3; iv++) {
+      model3D_VA.vFace[f * 3 + iv] = model3D[0]->vFace[f]->indV[iv];
+    }
+  }
 
-    for (f = 0 ; f < model3D[0]->vFace.size() ; f++ ) {
-        for (iv = 0 ; iv < 3 ; iv++ ) {
-            model3D_VA.vFace[f*3+iv] = model3D[0]->vFace[f]->indV[iv];
-            }
-        }
+  generateColors();
 
-    glGenBuffers(	2, modelVBO);
+  if (!colors)
+    exit(-1);
 
-    glBindBuffer(	GL_ARRAY_BUFFER, modelVBO[0]);
+  glGenBuffers(3, modelVBO);
 
-    glBufferData(	GL_ARRAY_BUFFER, model3D[0]->vPoint.size()*3*sizeof(float),
-                    model3D_VA.vPoint, GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, modelVBO[0]);
 
-    glBindBuffer(	GL_ELEMENT_ARRAY_BUFFER, modelVBO[1]);
+  glBufferData(GL_ARRAY_BUFFER, model3D[0]->vPoint.size() * 3 * sizeof(GLfloat),
+               model3D_VA.vPoint, GL_STATIC_DRAW);
 
-    glBufferData(	GL_ELEMENT_ARRAY_BUFFER, model3D[0]->vFace.size()*3*sizeof(unsigned int),
-                    model3D_VA.vFace, GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, modelVBO[1]);
 
-    free(model3D_VA.vPoint);
-    free(model3D_VA.vFace);
+  glBufferData(GL_ARRAY_BUFFER, model3D[0]->vPoint.size() * 4 * sizeof(GLfloat),
+               colors, GL_STATIC_DRAW);
 
-    cout << "Model Data: " << endl;
-    cout << "		# of objects 	: " << model3D.size() << endl;
-    cout << "		# of facets 	: " << model3D[0]->vFace.size() << endl;
-    cout << "		# of vertices 	: " << model3D[0]->vPoint.size() << endl;
-    cout << "Bounding Box" << endl;
-    cout << "Min.   Point = ( " << bbMin.x << " , " << bbMin.y << " , " << bbMin.z << " ) " << endl;
-    cout << "Max.   Point = ( " << bbMax.x << " , " << bbMax.y << " , " << bbMax.z << " ) " << endl;
-    cout << "Center Point = ( " << bbCenter.x << " , " << bbCenter.y << " , " << bbCenter.z << " ) " << endl;
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, modelVBO[2]);
+
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               model3D[0]->vFace.size() * 3 * sizeof(GLuint), model3D_VA.vFace,
+               GL_STATIC_DRAW);
+
+  free(model3D_VA.vPoint);
+  free(colors);
+  free(model3D_VA.vFace);
+
+  cout << "Model Data: " << endl;
+  cout << "		# of objects 	: " << model3D.size() << endl;
+  cout << "		# of facets 	: " << model3D[0]->vFace.size() << endl;
+  cout << "		# of vertices 	: " << model3D[0]->vPoint.size()
+       << endl;
+  cout << "Bounding Box" << endl;
+  cout << "Min.   Point = ( " << bbMin.x << " , " << bbMin.y << " , " << bbMin.z
+       << " ) " << endl;
+  cout << "Max.   Point = ( " << bbMax.x << " , " << bbMax.y << " , " << bbMax.z
+       << " ) " << endl;
+  cout << "Center Point = ( " << bbCenter.x << " , " << bbCenter.y << " , "
+       << bbCenter.z << " ) " << endl;
 }
 
 /// ***********************************************************************
@@ -194,31 +220,54 @@ Point massCenter = {0.0, 0.0, 0.0};
 /// ***********************************************************************
 
 void drawAxis() {
-    glBindBuffer(GL_ARRAY_BUFFER, axisVBO[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, axisVBO[0]);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, axisVBO[1]);
-    glVertexAttribPointer(glGetAttribLocation(axisShader,"aColor"), 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(glGetAttribLocation(axisShader,"aColor"));
+  glBindBuffer(GL_ARRAY_BUFFER, axisVBO[1]);
+  glVertexAttribPointer(glGetAttribLocation(axisShader, "aColor"), 4, GL_FLOAT,
+                        GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(glGetAttribLocation(axisShader, "aColor"));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axisVBO[2]);
-    glPointSize(8.0);
-    glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axisVBO[2]);
+  glPointSize(8.0);
+  glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, 0);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+glm::mat4 Model, View, Projection;
+glm::mat4 MVP = Projection * View * Model;
+
+void drawModel() {
+  glProgramUniformMatrix4fv(axisShader,
+                            glGetUniformLocation(axisShader, "uMVP"), 1, false,
+                            glm::value_ptr(MVP));
+
+  glBindBuffer(GL_ARRAY_BUFFER, modelVBO[0]);
+  glVertexAttribPointer(glGetAttribLocation(axisShader, "aPosition"), 3,
+                        GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(glGetAttribLocation(axisShader, "aPosition"));
+
+  glBindBuffer(GL_ARRAY_BUFFER, modelVBO[1]);
+  glVertexAttribPointer(glGetAttribLocation(axisShader, "aColor"), 4, GL_FLOAT,
+                        GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(glGetAttribLocation(axisShader, "aColor"));
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, modelVBO[2]);
+  glPointSize(8.0);
+  glDrawElements(GL_TRIANGLES, 144 * 3, GL_UNSIGNED_INT, 0);
 }
 
 /* ************************************************************************* */
 /*                                                                           */
 /* ************************************************************************* */
 
-void reshape(int w, int h) {
-
+void reshape(GLint w, GLint h) {
   winWdth = w;
   winHeight = h;
   glViewport(0, 0, winWdth, winHeight);
@@ -229,15 +278,48 @@ void reshape(int w, int h) {
 /*                                                                           */
 /* ************************************************************************* */
 
+GLuint timer = 0;
+GLint angle = 0;
+GLboolean clockwise = true;
 void idle() {
-    glutPostRedisplay();
+  ++timer;
+  if (timer >= 16) {
+
+    if (randomcolors) {
+      generateColors();
+      glBindBuffer(GL_ARRAY_BUFFER, modelVBO[1]);
+      glBufferData(GL_ARRAY_BUFFER,
+                   model3D[0]->vPoint.size() * 4 * sizeof(GLfloat), colors,
+                   GL_STATIC_DRAW);
+    }
+
+    if (spin) {
+      if (clockwise) {
+        ++angle;
+        if (angle > 30) {
+          clockwise = false;
+        }
+      } else {
+        --angle;
+        if (angle < -30) {
+          clockwise = true;
+        }
+      }
+      glProgramUniform1i(axisShader, glGetUniformLocation(axisShader, "uAngle"),
+                         angle);
+    }
+
+    timer = 0;
+  }
+
+  glutPostRedisplay();
 }
 
 /* ************************************************************************* */
 /*                                                                           */
 /* ************************************************************************* */
 
-void keyboard(unsigned char key, int x, int y) {
+void keyboard(GLubyte key, GLint x, GLint y) {
 
   switch (key) {
   case 27:
@@ -246,6 +328,14 @@ void keyboard(unsigned char key, int x, int y) {
   case 'A':
   case 'a':
     drawRef = !drawRef;
+    break;
+  case 'C':
+  case 'c':
+    randomcolors = !randomcolors;
+    break;
+  case 'S':
+  case 's':
+    spin = !spin;
     break;
   case 'R':
   case 'r':
@@ -269,7 +359,8 @@ void display(void) {
 
   if (drawRef) {
     glUseProgram(axisShader);
-    drawAxis();
+    // drawAxis();
+    drawModel();
   }
 
   glutSwapBuffers();
@@ -313,22 +404,32 @@ void initShaders(void) {
 /* ************************************************************************* */
 /* ************************************************************************* */
 
-int main(int argc, char *argv[]) {
+GLint main(int argc, char *argv[]) {
+
+  srand(time(NULL));
 
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-  glutCreateWindow("draw3D");
+  glutInitWindowPosition((glutGet(GLUT_SCREEN_WIDTH) - winWdth) / 2,
+                         (glutGet(GLUT_SCREEN_HEIGHT) - winHeight) / 2);
+  glutCreateWindow("Ultra Seven Effect");
   glutReshapeWindow(winWdth, winHeight);
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
-  glutIdleFunc(NULL);
 
-  readModelOBJ("malha.obj",model3D);
+  if (run)
+    glutIdleFunc(idle);
+  else
+    glutIdleFunc(NULL);
+
+  readModelOBJ("malha.obj", model3D);
 
   initGL();
 
-  criaVBO();
+  // criaVBO();
+
+  buildModel();
 
   initShaders();
 
