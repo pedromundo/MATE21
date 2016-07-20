@@ -40,7 +40,7 @@ GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile);
 /// **
 /// ***********************************************************************
 
-void criaVBO() {
+GLvoid criaVBO() {
 
   ObjectVA axis_VA;
 
@@ -119,7 +119,7 @@ void criaVBO() {
   free(axis_VA.vFace);
 }
 
-void generateColors() {
+GLvoid generateColors() {
   colors = (GLfloat *)malloc(4 * model3D[0]->vPoint.size() * sizeof(GLfloat));
 
   for (GLuint var = 0; var < 4 * model3D[0]->vPoint.size(); ++var) {
@@ -127,7 +127,7 @@ void generateColors() {
   }
 }
 
-void buildModel() {
+GLvoid buildModel() {
 
   ObjectVA model3D_VA;
   GLuint f, iv, v;
@@ -219,7 +219,7 @@ void buildModel() {
 /// **
 /// ***********************************************************************
 
-void drawAxis() {
+GLvoid drawAxis() {
   glBindBuffer(GL_ARRAY_BUFFER, axisVBO[0]);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(0);
@@ -243,7 +243,7 @@ void drawAxis() {
 glm::mat4 Model, View, Projection;
 glm::mat4 MVP = Projection * View * Model;
 
-void drawModel() {
+GLvoid drawModel() {
   glProgramUniformMatrix4fv(axisShader,
                             glGetUniformLocation(axisShader, "uMVP"), 1, false,
                             glm::value_ptr(MVP));
@@ -267,7 +267,7 @@ void drawModel() {
 /*                                                                           */
 /* ************************************************************************* */
 
-void reshape(GLint w, GLint h) {
+GLvoid reshape(GLint w, GLint h) {
   winWdth = w;
   winHeight = h;
   glViewport(0, 0, winWdth, winHeight);
@@ -281,7 +281,7 @@ void reshape(GLint w, GLint h) {
 GLuint timer = 0;
 GLint angle = 0;
 GLboolean clockwise = true;
-void idle() {
+GLvoid idle() {
   ++timer;
   if (timer >= 16) {
 
@@ -319,7 +319,7 @@ void idle() {
 /*                                                                           */
 /* ************************************************************************* */
 
-void keyboard(GLubyte key, GLint x, GLint y) {
+GLvoid keyboard(GLubyte key, GLint x, GLint y) {
 
   switch (key) {
   case 27:
@@ -353,7 +353,7 @@ void keyboard(GLubyte key, GLint x, GLint y) {
 /*                                                                           */
 /* ************************************************************************* */
 
-void display(void) {
+GLvoid display(GLvoid) {
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -370,7 +370,7 @@ void display(void) {
 /*                                                                           */
 /* ************************************************************************* */
 
-void initGL(void) {
+GLvoid initGL(GLvoid) {
 
   glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -392,7 +392,7 @@ void initGL(void) {
 /*                                                                           */
 /* ************************************************************************* */
 
-void initShaders(void) {
+GLvoid initShaders(GLvoid) {
 
   // Load shaders and use the resulting shader program
   axisShader = InitShader("axisShader.vert", "axisShader.frag");
@@ -404,7 +404,7 @@ void initShaders(void) {
 /* ************************************************************************* */
 /* ************************************************************************* */
 
-GLint main(int argc, char *argv[]) {
+GLint main(GLint argc, GLchar *argv[]) {
 
   srand(time(NULL));
 

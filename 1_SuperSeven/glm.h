@@ -25,7 +25,7 @@
 /* GLMmaterial: Structure that defines a material in a model.
  */
 typedef struct _GLMmaterial {
-  char *name;           /* name of material */
+  GLchar *name;           /* name of material */
   GLfloat diffuse[4];   /* diffuse component */
   GLfloat ambient[4];   /* ambient component */
   GLfloat specular[4];  /* specular component */
@@ -45,7 +45,7 @@ typedef struct _GLMtriangle {
 /* GLMgroup: Structure that defines a group in a model.
  */
 typedef struct _GLMgroup {
-  char *name;             /* name of this group */
+  GLchar *name;             /* name of this group */
   GLuint numtriangles;    /* number of triangles in this group */
   GLuint *triangles;      /* array of triangle indices */
   GLuint material;        /* index to material for group */
@@ -55,8 +55,8 @@ typedef struct _GLMgroup {
 /* GLMmodel: Structure that defines a model.
  */
 typedef struct _GLMmodel {
-  char *pathname;   /* path to this model */
-  char *mtllibname; /* name of the material library */
+  GLchar *pathname;   /* path to this model */
+  GLchar *mtllibname; /* name of the material library */
 
   GLuint numvertices; /* number of vertices in model */
   GLfloat *vertices;  /* array of vertices  */
@@ -173,7 +173,7 @@ GLvoid glmDelete(GLMmodel *model);
  *
  * filename - name of the file containing the Wavefront .OBJ format data.
  */
-GLMmodel *glmReadOBJ(char *filename);
+GLMmodel *glmReadOBJ(GLchar *filename);
 
 /* glmWriteOBJ: Writes a model description in Wavefront .OBJ format to
  * a file.
@@ -187,7 +187,7 @@ GLMmodel *glmReadOBJ(char *filename);
  *            GLM_TEXTURE -  write texture coords
  *            GLM_FLAT and GLM_SMOOTH should not both be specified.
  */
-GLvoid glmWriteOBJ(GLMmodel *model, char *filename, GLuint mode);
+GLvoid glmWriteOBJ(GLMmodel *model, GLchar *filename, GLuint mode);
 
 /* glmDraw: Renders the model to the current OpenGL context using the
  * mode specified.
@@ -253,4 +253,4 @@ GLvoid glmWeld(GLMmodel *model, GLfloat epsilon);
  * height     - will contain the height of the image on return.
  *
  */
-GLubyte *glmReadPPM(char *filename, int *width, int *height);
+GLubyte *glmReadPPM(GLchar *filename, GLint *width, GLint *height);

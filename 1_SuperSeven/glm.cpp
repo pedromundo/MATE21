@@ -131,7 +131,7 @@ GLfloat *glmWeldVectors(GLfloat *vectors, GLuint *numvectors, GLfloat epsilon) {
 }
 
 /* glmFindGroup: Find a group in the model */
-GLMgroup *glmFindGroup(GLMmodel *model, const char *name) {
+GLMgroup *glmFindGroup(GLMmodel *model, const GLchar *name) {
   GLMgroup *group;
 
   assert(model);
@@ -147,7 +147,7 @@ GLMgroup *glmFindGroup(GLMmodel *model, const char *name) {
 }
 
 /* glmAddGroup: Add a group to the model */
-GLMgroup *glmAddGroup(GLMmodel *model, const char *name) {
+GLMgroup *glmAddGroup(GLMmodel *model, const GLchar *name) {
   GLMgroup *group;
 
   group = glmFindGroup(model, name);
@@ -166,7 +166,7 @@ GLMgroup *glmAddGroup(GLMmodel *model, const char *name) {
 }
 
 /* glmFindGroup: Find a material in the model */
-GLuint glmFindMaterial(GLMmodel *model, const char *name) {
+GLuint glmFindMaterial(GLMmodel *model, const GLchar *name) {
   GLuint i;
 
   /* XXX doing a linear search on a string key'd list is pretty lame,
@@ -191,9 +191,9 @@ found:
  *
  * NOTE: the return value should be free'd.
  */
-static char *glmDirName(char *path) {
-  char *dir;
-  char *s;
+static GLchar *glmDirName(GLchar *path) {
+  GLchar *dir;
+  GLchar *s;
 
   dir = strdup(path);
 
@@ -211,15 +211,15 @@ static char *glmDirName(char *path) {
  * model - properly initialized GLMmodel structure
  * name  - name of the material library
  */
-static GLvoid glmReadMTL(GLMmodel *model, char *name) {
+static GLvoid glmReadMTL(GLMmodel *model, GLchar *name) {
   FILE *file;
-  char *dir;
-  char *filename;
-  char buf[128];
+  GLchar *dir;
+  GLchar *filename;
+  GLchar buf[128];
   GLuint nummaterials, i;
 
   dir = glmDirName(model->pathname);
-  filename = (char *)malloc(sizeof(char) * (strlen(dir) + strlen(name) + 1));
+  filename = (GLchar *)malloc(sizeof(GLchar) * (strlen(dir) + strlen(name) + 1));
   strcpy(filename, dir);
   strcat(filename, name);
   free(dir);
@@ -333,15 +333,15 @@ static GLvoid glmReadMTL(GLMmodel *model, char *name) {
  * modelpath  - pathname of the model being written
  * mtllibname - name of the material library to be written
  */
-static GLvoid glmWriteMTL(GLMmodel *model, char *modelpath, char *mtllibname) {
+static GLvoid glmWriteMTL(GLMmodel *model, GLchar *modelpath, GLchar *mtllibname) {
   FILE *file;
-  char *dir;
-  char *filename;
+  GLchar *dir;
+  GLchar *filename;
   GLMmaterial *material;
   GLuint i;
 
   dir = glmDirName(modelpath);
-  filename = (char *)malloc(sizeof(char) * (strlen(dir) + strlen(mtllibname)));
+  filename = (GLchar *)malloc(sizeof(GLchar) * (strlen(dir) + strlen(mtllibname)));
   strcpy(filename, dir);
   strcat(filename, mtllibname);
   free(dir);
@@ -391,8 +391,8 @@ static GLvoid glmFirstPass(GLMmodel *model, FILE *file) {
   GLuint numtexcoords; /* number of texcoords in model */
   GLuint numtriangles; /* number of triangles in model */
   GLMgroup *group;     /* current group */
-  unsigned v, n, t;
-  char buf[128];
+  GLuint v, n, t;
+  GLchar buf[128];
 
   /* make a default group */
   group = glmAddGroup(model, "default");
@@ -534,7 +534,7 @@ static GLvoid glmSecondPass(GLMmodel *model, FILE *file) {
   GLMgroup *group;     /* current group pointer */
   GLuint material;     /* current material */
   GLuint v, n, t;
-  char buf[128];
+  GLchar buf[128];
 
   /* set the pointer shortcuts */
   vertices = model->vertices;
@@ -1314,7 +1314,7 @@ GLMmodel *glmReadOBJ(char *filename) {
  *             GLM_COLOR and GLM_MATERIAL should not both be specified.
  *             GLM_FLAT and GLM_SMOOTH should not both be specified.
  */
-GLvoid glmWriteOBJ(GLMmodel *model, char *filename, GLuint mode) {
+GLvoid glmWriteOBJ(GLMmodel *model, GLchar *filename, GLuint mode) {
   GLuint i;
   FILE *file;
   GLMgroup *group;
@@ -1694,11 +1694,11 @@ GLvoid glmWeld(GLMmodel *model, GLfloat epsilon) {
  * height     - will contain the height of the image on return.
  *
  */
-GLubyte *glmReadPPM(char *filename, int *width, int *height) {
+GLubyte *glmReadPPM(GLchar *filename, GLint *width, GLint *height) {
   FILE *fp;
-  int i, w, h, d;
-  unsigned char *image;
-  char head[70]; /* max line <= 70 in PPM (per spec). */
+  GLint i, w, h, d;
+  GLubyte *image;
+  GLchar head[70]; /* max line <= 70 in PPM (per spec). */
 
   fp = fopen(filename, "rb");
   if (!fp) {
@@ -1729,8 +1729,8 @@ GLubyte *glmReadPPM(char *filename, int *width, int *height) {
   }
 
   /* grab all the image data in one fell swoop. */
-  image = (unsigned char *)malloc(sizeof(unsigned char) * w * h * 3);
-  fread(image, sizeof(unsigned char), w * h * 3, fp);
+  image = (GLubyte *)malloc(sizeof(GLubyte) * w * h * 3);
+  fread(image, sizeof(GLubyte), w * h * 3, fp);
   fclose(fp);
 
   *width = w;

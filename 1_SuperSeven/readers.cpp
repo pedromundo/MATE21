@@ -18,7 +18,7 @@ using namespace std;
 /* ************************************************************************* */
 /* ************************************************************************* */
 
-void readModelOBJ(char *filename, vector<Object *> &model3D) {
+GLvoid readModelOBJ(GLchar *filename, vector<Object *> &model3D) {
 
   GLMmodel *pmodel = NULL;
 
@@ -44,9 +44,9 @@ void readModelOBJ(char *filename, vector<Object *> &model3D) {
   Object *obj = new Object;
   obj->ID = 0;
 
-  int minIndFace = pmodel->numvertices + 10000;
+  GLint minIndFace = pmodel->numvertices + 10000;
 
-  for (unsigned int i = 1; i <= pmodel->numvertices; i++) {
+  for (GLuint i = 1; i <= pmodel->numvertices; i++) {
     Vertice *v = new Vertice;
 
     v->pto.x = pmodel->vertices[3 * i + 0];
@@ -85,11 +85,11 @@ void readModelOBJ(char *filename, vector<Object *> &model3D) {
   */
   group = pmodel->groups;
 
-  int iFace = 0;
+  GLint iFace = 0;
 
   while (group) {
 
-    for (unsigned int i = 0; i < group->numtriangles; i++) {
+    for (GLuint i = 0; i < group->numtriangles; i++) {
 
       triangle = &T(group->triangles[i]);
       Face *f = new Face;
@@ -98,7 +98,7 @@ void readModelOBJ(char *filename, vector<Object *> &model3D) {
       f->normal.y = pmodel->normals[triangle->nindices[1]];
       f->normal.z = pmodel->normals[triangle->nindices[2]];
 
-      for (unsigned int k = 0; k < 3; k++) {
+      for (GLuint k = 0; k < 3; k++) {
         f->indV[k] = (triangle->vindices[k]);
 
         if (minIndFace > f->indV[k])
@@ -111,8 +111,8 @@ void readModelOBJ(char *filename, vector<Object *> &model3D) {
   }
 
   if (minIndFace > 0)
-    for (unsigned int f = 0; f < obj->vFace.size(); f++)
-      for (unsigned int iv = 0; iv < 3; iv++)
+    for (GLuint f = 0; f < obj->vFace.size(); f++)
+      for (GLuint iv = 0; iv < 3; iv++)
         obj->vFace[f]->indV[iv] -= minIndFace;
 
   model3D.push_back(obj);

@@ -62,7 +62,7 @@ GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile) {
       std::cerr << s.filename << " failed to compile:" << std::endl;
       GLint logSize;
       glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize);
-      char *logMsg = new char[logSize];
+      GLchar *logMsg = new GLchar[logSize];
       glGetShaderInfoLog(shader, logSize, NULL, logMsg);
       std::cerr << logMsg << std::endl;
       delete[] logMsg;
