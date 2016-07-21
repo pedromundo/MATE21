@@ -1,7 +1,6 @@
-#ifndef HELLOWORLD_H
-#define HELLOWORLD_H
+#ifndef KERNEL_CUH_
+#define KERNEL_CUH_
 
-#endif // HELLOWORLD_H
+void matrixMultiplication(float *A, float *B, float *C, int N);
 
-int doCuda();
-
+#endif

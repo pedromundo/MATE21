@@ -10,10 +10,7 @@
 #include <GL/glew.h>
 #include <GL/glut.h>
 
-#include <cuda.h>
-#include <cudaGL.h>
-#include <cuda_gl_interop.h>
-
+#include "dev_array.h"
 #include "myDataStructures.h"
 #include "readers.h"
 #include "hello-world.h"
@@ -43,85 +40,6 @@ GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile);
 /// ***********************************************************************
 /// **
 /// ***********************************************************************
-
-GLvoid criaVBO() {
-
-  ObjectVA axis_VA;
-
-  axis_VA.vFace = (GLuint *)malloc(4 * 1 * sizeof(GLuint));
-  if (!axis_VA.vFace)
-    exit(-1);
-
-  axis_VA.vPoint = (GLfloat *)malloc(4 * 3 * sizeof(GLfloat));
-  if (!axis_VA.vPoint)
-    exit(-1);
-
-  axis_VA.vFace[0] = 0;
-  axis_VA.vFace[1] = 1;
-  axis_VA.vFace[2] = 2;
-  axis_VA.vFace[3] = 3;
-
-  axis_VA.vPoint[0] = -1.0;
-  axis_VA.vPoint[1] = -1.0;
-  axis_VA.vPoint[2] = 0.0;
-
-  axis_VA.vPoint[3] = -1.0;
-  axis_VA.vPoint[4] = 1.0;
-  axis_VA.vPoint[5] = 0.0;
-
-  axis_VA.vPoint[6] = 1.0;
-  axis_VA.vPoint[7] = 1.0;
-  axis_VA.vPoint[8] = 0.0;
-
-  axis_VA.vPoint[9] = 1.0;
-  axis_VA.vPoint[10] = -1.0;
-  axis_VA.vPoint[11] = 0.0;
-
-  axis_VA.vColor = (GLfloat *)malloc(4 * 4 * sizeof(GLfloat));
-  if (!axis_VA.vColor)
-    exit(-1);
-
-  axis_VA.vColor[0] = 0.0;
-  axis_VA.vColor[1] = 0.0;
-  axis_VA.vColor[2] = 0.0;
-  axis_VA.vColor[3] = 0.0;
-
-  axis_VA.vColor[4] = 1.0;
-  axis_VA.vColor[5] = 0.0;
-  axis_VA.vColor[6] = 0.0;
-  axis_VA.vColor[7] = 1.0;
-
-  axis_VA.vColor[8] = 0.0;
-  axis_VA.vColor[9] = 1.0;
-  axis_VA.vColor[10] = 0.0;
-  axis_VA.vColor[11] = 1.0;
-
-  axis_VA.vColor[12] = 0.0;
-  axis_VA.vColor[13] = 0.0;
-  axis_VA.vColor[14] = 1.0;
-  axis_VA.vColor[15] = 1.0;
-
-  axis_VA.vTextCoord = NULL;
-  axis_VA.vNormal = NULL;
-
-  glGenBuffers(3, axisVBO);
-
-  glBindBuffer(GL_ARRAY_BUFFER, axisVBO[0]);
-  glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(GLfloat), axis_VA.vPoint,
-               GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ARRAY_BUFFER, axisVBO[1]);
-  glBufferData(GL_ARRAY_BUFFER, 4 * 4 * sizeof(GLfloat), axis_VA.vColor,
-               GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axisVBO[2]);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * 1 * sizeof(GLuint), axis_VA.vFace,
-               GL_STATIC_DRAW);
-
-  free(axis_VA.vPoint);
-  free(axis_VA.vColor);
-  free(axis_VA.vFace);
-}
 
 GLvoid generateColors() {
   colors = (GLfloat *)malloc(4 * model3D[0]->vPoint.size() * sizeof(GLfloat));
@@ -219,31 +137,6 @@ GLvoid buildModel() {
        << bbCenter.z << " ) " << endl;
 }
 
-/// ***********************************************************************
-/// **
-/// ***********************************************************************
-
-GLvoid drawAxis() {
-  glBindBuffer(GL_ARRAY_BUFFER, axisVBO[0]);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, axisVBO[1]);
-  glVertexAttribPointer(glGetAttribLocation(axisShader, "aColor"), 4, GL_FLOAT,
-                        GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(glGetAttribLocation(axisShader, "aColor"));
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, axisVBO[2]);
-  glPointSize(8.0);
-  glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, 0);
-
-  glDisableVertexAttribArray(0);
-  glDisableVertexAttribArray(1);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
 glm::mat4 Model, View, Projection;
 glm::mat4 MVP = Projection * View * Model;
 
@@ -267,20 +160,12 @@ GLvoid drawModel() {
   glDrawElements(GL_TRIANGLES, 144 * 3, GL_UNSIGNED_INT, 0);
 }
 
-/* ************************************************************************* */
-/*                                                                           */
-/* ************************************************************************* */
-
 GLvoid reshape(GLint w, GLint h) {
   winWdth = w;
   winHeight = h;
   glViewport(0, 0, winWdth, winHeight);
   glutPostRedisplay();
 }
-
-/* ************************************************************************* */
-/*                                                                           */
-/* ************************************************************************* */
 
 GLuint timer = 0;
 GLint angle = 0;
@@ -319,10 +204,6 @@ GLvoid idle() {
   glutPostRedisplay();
 }
 
-/* ************************************************************************* */
-/*                                                                           */
-/* ************************************************************************* */
-
 GLvoid keyboard(GLubyte key, GLint x, GLint y) {
 
   switch (key) {
@@ -353,28 +234,19 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y) {
   glutPostRedisplay();
 }
 
-/* ************************************************************************* */
-/*                                                                           */
-/* ************************************************************************* */
-
 GLvoid display(GLvoid) {
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   if (drawRef) {
-    glUseProgram(axisShader);
-    // drawAxis();
+    glUseProgram(axisShader);    
     drawModel();
   }
 
   glutSwapBuffers();
 }
 
-/* ************************************************************************* */
-/*                                                                           */
-/* ************************************************************************* */
-
-GLvoid initGL(GLvoid) {
+GLvoid initGL() {
 
   glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -392,21 +264,75 @@ GLvoid initGL(GLvoid) {
        << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 }
 
-/* ************************************************************************* */
-/*                                                                           */
-/* ************************************************************************* */
-
-GLvoid initShaders(GLvoid) {
+GLvoid initShaders() {
 
   // Load shaders and use the resulting shader program
   axisShader = InitShader("axisShader.vert", "axisShader.frag");
 }
 
-/* ************************************************************************* */
-/* ************************************************************************* */
-/* *****                                                               ***** */
-/* ************************************************************************* */
-/* ************************************************************************* */
+//CUDA MATRIX MULT
+
+GLvoid doCuda(){
+    // Perform matrix multiplication C = A*B
+      // where A, B and C are NxN matrices
+      int N = 16;
+      int SIZE = N*N;
+
+      // Allocate memory on the host
+      vector<float> h_A(SIZE);
+      vector<float> h_B(SIZE);
+      vector<float> h_C(SIZE);
+
+      // Initialize matrices on the host
+      for (int i=0; i<N; i++){
+          for (int j=0; j<N; j++){
+              h_A[i*N+j] = sin(i);
+              h_B[i*N+j] = cos(j);
+          }
+      }
+
+      // Allocate memory on the device
+      dev_array<float> d_A(SIZE);
+      dev_array<float> d_B(SIZE);
+      dev_array<float> d_C(SIZE);
+
+      d_A.set(&h_A[0], SIZE);
+      d_B.set(&h_B[0], SIZE);
+
+      matrixMultiplication(d_A.getData(), d_B.getData(), d_C.getData(), N);
+      cudaDeviceSynchronize();
+
+      d_C.get(&h_C[0], SIZE);
+      cudaDeviceSynchronize();
+
+      float *cpu_C;
+      cpu_C=new float[SIZE];
+
+      // Now do the matrix multiplication on the CPU
+      float sum;
+      for (int row=0; row<N; row++){
+          for (int col=0; col<N; col++){
+              sum = 0.f;
+              for (int n=0; n<N; n++){
+                  sum += h_A[row*N+n]*h_B[n*N+col];
+              }
+              cpu_C[row*N+col] = sum;
+          }
+      }
+
+      double err = 0;
+      // Check the result and make sure it is correct
+      for (int ROW=0; ROW < N; ROW++){
+          for (int COL=0; COL < N; COL++){
+              err += cpu_C[ROW * N + COL] - h_C[ROW * N + COL];
+          }
+      }
+
+      cout << "Error: " << err << endl;
+
+      return;
+}
+
 
 GLint main(GLint argc, GLchar *argv[]) {
 
@@ -427,15 +353,13 @@ GLint main(GLint argc, GLchar *argv[]) {
   else
     glutIdleFunc(NULL);
 
-  readModelOBJ("malha.obj", model3D);  
+  readModelOBJ("malha.obj", model3D);
 
   initGL();
 
-  // criaVBO();
-
-  buildModel();  
-
   doCuda();
+
+  buildModel();
 
   initShaders();
 

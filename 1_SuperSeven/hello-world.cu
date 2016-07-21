@@ -1,46 +1,40 @@
-// This is the REAL "hello world" for CUDA!
-// It takes the string "Hello ", prints it, then passes it to CUDA
-// with an array of offsets. Then the offsets are added in parallel
-// to produce the string "World!"
-// By Ingemar Ragnemalm 2010
+#include <math.h>
+#include <iostream>
+#include "cuda_runtime.h"
+#include "hello-world.h"
+#include <stdlib.h>
 
-// nvcc hello-world.cu -L /usr/local/cuda/lib -lcudart -o hello-world
-#include <stdio.h>
+using namespace std;
 
-const int N = 16; 
-const int blocksize = 16; 
+__global__ void matrixMultiplicationKernel(float* A, float* B, float* C, int N) {
 
-__global__ 
-void hello(char *a, int *b) 
-{
-	a[threadIdx.x] += b[threadIdx.x];
+    int ROW = blockIdx.y*blockDim.y+threadIdx.y;
+    int COL = blockIdx.x*blockDim.x+threadIdx.x;
+
+    float tmpSum = 0;
+
+    if (ROW < N && COL < N) {
+        // each thread computes one element of the block sub-matrix
+        for (int i = 0; i < N; i++) {
+            tmpSum += A[ROW * N + i] * B[i * N + COL];
+        }
+    }
+    C[ROW * N + COL] = tmpSum;
 }
 
-int doCuda()
-{
-	char a[N] = "Hello \0\0\0\0\0\0";
-	int b[N] = {15, 10, 6, 0, -11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-	char *ad;
-	int *bd;
-	const int csize = N*sizeof(char);
-	const int isize = N*sizeof(int);
+void matrixMultiplication(float *A, float *B, float *C, int N){
 
-    printf("%s", a);
+    // declare the number of blocks per grid and the number of threads per block
+    // use 1 to 512 threads per block
+    dim3 threadsPerBlock(N, N);
+    dim3 blocksPerGrid(1, 1);
+        if (N*N > 512){
+            threadsPerBlock.x = 512;
+            threadsPerBlock.y = 512;
+            blocksPerGrid.x = ceil(double(N)/double(threadsPerBlock.x));
+            blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
+        }
 
-	cudaMalloc( (void**)&ad, csize ); 
-	cudaMalloc( (void**)&bd, isize ); 
-	cudaMemcpy( ad, a, csize, cudaMemcpyHostToDevice ); 
-	cudaMemcpy( bd, b, isize, cudaMemcpyHostToDevice ); 
-	
-	dim3 dimBlock( blocksize, 1 );
-	dim3 dimGrid( 1, 1 );
-	hello<<<dimGrid, dimBlock>>>(ad, bd);
-	cudaMemcpy( a, ad, csize, cudaMemcpyDeviceToHost ); 
-	cudaFree( ad );
-	cudaFree( bd );
-	
-    printf("%s\n", a);
-
-    return 1337;
+    matrixMultiplicationKernel<<<blocksPerGrid,threadsPerBlock>>>(A, B, C, N);
 }

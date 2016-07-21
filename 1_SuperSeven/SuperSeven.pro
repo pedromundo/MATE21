@@ -3,7 +3,8 @@ HEADERS += \
     myDataStructures.h \
     readers.h \
     glm.h \
-    hello-world.h
+    hello-world.h \
+    dev_array.h
 
 SOURCES += \
     draw3D.cpp \
