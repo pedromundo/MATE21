@@ -8,11 +8,15 @@
 #include <iostream>
 
 #include <GL/glew.h>
-
 #include <GL/glut.h>
+
+#include <cuda.h>
+#include <cudaGL.h>
+#include <cuda_gl_interop.h>
 
 #include "myDataStructures.h"
 #include "readers.h"
+#include "hello-world.h"
 
 using namespace std;
 
@@ -283,7 +287,7 @@ GLint angle = 0;
 GLboolean clockwise = true;
 GLvoid idle() {
   ++timer;
-  if (timer >= 16) {
+  if (timer >= 1) {
 
     if (randomcolors) {
       generateColors();
@@ -423,13 +427,15 @@ GLint main(GLint argc, GLchar *argv[]) {
   else
     glutIdleFunc(NULL);
 
-  readModelOBJ("malha.obj", model3D);
+  readModelOBJ("malha.obj", model3D);  
 
   initGL();
 
   // criaVBO();
 
-  buildModel();
+  buildModel();  
+
+  doCuda();
 
   initShaders();
 
