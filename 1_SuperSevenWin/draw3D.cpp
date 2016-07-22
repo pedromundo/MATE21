@@ -355,7 +355,7 @@ GLint main(GLint argc, GLchar *argv[]) {
 	else
 		glutIdleFunc(NULL);
 
-	readModelOBJ("malha.obj", model3D);
+	readModelOBJ("malha.3do", model3D);
 
 	initGL();
 

@@ -19,8 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <None Include="axisShader.frag" />
-    <None Include="axisShader.vert" />
+    <None Include="axisShader.frag">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="axisShader.vert">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="malha.3do">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="vc120.pdb" />
   </ItemGroup>
   <ItemGroup>
@@ -113,7 +120,10 @@
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
-copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy malha.3do "$(OutDir)"
+copy axisShader.* "$(OutDir)"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -152,7 +162,10 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
-copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
+copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
+copy malha.3do "$(OutDir)"
+copy axisShader.* "$(OutDir)"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
