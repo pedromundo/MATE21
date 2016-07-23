@@ -123,6 +123,7 @@
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy malha.3do "$(OutDir)"
 copy axisShader.* "$(OutDir)"
+copy .\BinDepends\* "$(OutDir)"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
