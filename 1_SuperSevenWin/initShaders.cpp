@@ -16,7 +16,6 @@ using namespace::std;
 
 // Create a NULL-terminated string by reading the provided file
 static GLchar *readShaderSource(const GLchar *shaderFile) {
-
 	FILE *fp = fopen(shaderFile, "r");
 
 	if (fp == NULL) {
@@ -47,7 +46,6 @@ static GLchar *readShaderSource(const GLchar *shaderFile) {
 
 // Create a GLSL program object from vertex and fragment shader files
 GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile) {
-
 	tShader shaders[2] = { { vShaderFile, GL_VERTEX_SHADER, NULL },
 	{ fShaderFile, GL_FRAGMENT_SHADER, NULL } };
 

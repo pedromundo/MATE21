@@ -19,103 +19,100 @@ using namespace std;
 /* ************************************************************************* */
 
 GLvoid readModelOBJ(GLchar *filename, vector<Object *> &model3D) {
-
-  GLMmodel *pmodel = NULL;
+	GLMmodel *pmodel = NULL;
 
 #define T(x) (pmodel->triangles[(x)])
 
-  cout << "Start loading OBJ model " << filename << " ...." << endl;
+	cout << "Start loading OBJ model " << filename << " ...." << endl;
 
-  pmodel = glmReadOBJ(filename);
-  if (!pmodel) {
-    cout << "Error reading OBJ file !!" << endl;
-    exit(0);
-  }
-  //	glmUnitize(pmodel);
-  glmFacetNormals(pmodel);
-  glmVertexNormals(pmodel, 90.0);
+	pmodel = glmReadOBJ(filename);
+	if (!pmodel) {
+		cout << "Error reading OBJ file !!" << endl;
+		exit(0);
+	}
+	//	glmUnitize(pmodel);
+	glmFacetNormals(pmodel);
+	glmVertexNormals(pmodel, 90.0);
 
-  GLMgroup *group;
-  GLMtriangle *triangle;
+	GLMgroup *group;
+	GLMtriangle *triangle;
 
-  assert(pmodel);
-  assert(pmodel->vertices);
+	assert(pmodel);
+	assert(pmodel->vertices);
 
-  Object *obj = new Object;
-  obj->ID = 0;
+	Object *obj = new Object;
+	obj->ID = 0;
 
-  GLint minIndFace = pmodel->numvertices + 10000;
+	GLint minIndFace = pmodel->numvertices + 10000;
 
-  for (GLuint i = 1; i <= pmodel->numvertices; i++) {
-    Vertice *v = new Vertice;
+	for (GLuint i = 1; i <= pmodel->numvertices; i++) {
+		Vertice *v = new Vertice;
 
-    v->pto.x = pmodel->vertices[3 * i + 0];
-    v->pto.y = pmodel->vertices[3 * i + 1];
-    v->pto.z = pmodel->vertices[3 * i + 2];
-    v->normal.x = pmodel->normals[3 * i + 0];
-    v->normal.y = pmodel->normals[3 * i + 1];
-    v->normal.z = pmodel->normals[3 * i + 2];
-    v->ID = i;
-    v->valencia = 0;
+		v->pto.x = pmodel->vertices[3 * i + 0];
+		v->pto.y = pmodel->vertices[3 * i + 1];
+		v->pto.z = pmodel->vertices[3 * i + 2];
+		v->normal.x = pmodel->normals[3 * i + 0];
+		v->normal.y = pmodel->normals[3 * i + 1];
+		v->normal.z = pmodel->normals[3 * i + 2];
+		v->ID = i;
+		v->valencia = 0;
 
-    obj->vPoint.push_back(v);
-  }
-  /*
-      int iFace = 0;
+		obj->vPoint.push_back(v);
+	}
+	/*
+		int iFace = 0;
 
-          for (unsigned int i = 1; i <= pmodel->numtriangles; i++) {
-                  Face* f = new Face;
+		for (unsigned int i = 1; i <= pmodel->numtriangles; i++) {
+		Face* f = new Face;
 
-                  f->ID		= iFace++;
-                  f->normal.x =
-     pmodel->normals[pmodel->triangles[i].nindices[0]];
-                  f->normal.y =
-     pmodel->normals[pmodel->triangles[i].nindices[1]];
-                  f->normal.z =
-     pmodel->normals[pmodel->triangles[i].nindices[2]];
+		f->ID		= iFace++;
+		f->normal.x =
+		pmodel->normals[pmodel->triangles[i].nindices[0]];
+		f->normal.y =
+		pmodel->normals[pmodel->triangles[i].nindices[1]];
+		f->normal.z =
+		pmodel->normals[pmodel->triangles[i].nindices[2]];
 
-                  for(unsigned int k = 0; k < 3; k++)  {
-                          f->indV[k] = pmodel->triangles[i].vindices[k];
-                          if (minIndFace > f->indV[k])
-                                  minIndFace = f->indV[k];
-                          }
+		for(unsigned int k = 0; k < 3; k++)  {
+		f->indV[k] = pmodel->triangles[i].vindices[k];
+		if (minIndFace > f->indV[k])
+		minIndFace = f->indV[k];
+		}
 
-                  obj->vFace.push_back(f);
-          }
-  */
-  group = pmodel->groups;
+		obj->vFace.push_back(f);
+		}
+		*/
+	group = pmodel->groups;
 
-  GLint iFace = 0;
+	GLint iFace = 0;
 
-  while (group) {
+	while (group) {
+		for (GLuint i = 0; i < group->numtriangles; i++) {
+			triangle = &T(group->triangles[i]);
+			Face *f = new Face;
+			f->ID = iFace++;
+			f->normal.x = pmodel->normals[triangle->nindices[0]];
+			f->normal.y = pmodel->normals[triangle->nindices[1]];
+			f->normal.z = pmodel->normals[triangle->nindices[2]];
 
-    for (GLuint i = 0; i < group->numtriangles; i++) {
+			for (GLuint k = 0; k < 3; k++) {
+				f->indV[k] = (triangle->vindices[k]);
 
-      triangle = &T(group->triangles[i]);
-      Face *f = new Face;
-      f->ID = iFace++;
-      f->normal.x = pmodel->normals[triangle->nindices[0]];
-      f->normal.y = pmodel->normals[triangle->nindices[1]];
-      f->normal.z = pmodel->normals[triangle->nindices[2]];
+				if (minIndFace > f->indV[k])
+					minIndFace = f->indV[k];
+			}
+			obj->vFace.push_back(f);
+		}
 
-      for (GLuint k = 0; k < 3; k++) {
-        f->indV[k] = (triangle->vindices[k]);
+		group = group->next;
+	}
 
-        if (minIndFace > f->indV[k])
-          minIndFace = f->indV[k];
-      }
-      obj->vFace.push_back(f);
-    }
+	if (minIndFace > 0)
+		for (GLuint f = 0; f < obj->vFace.size(); f++)
+			for (GLuint iv = 0; iv < 3; iv++)
+				obj->vFace[f]->indV[iv] -= minIndFace;
 
-    group = group->next;
-  }
+	model3D.push_back(obj);
 
-  if (minIndFace > 0)
-    for (GLuint f = 0; f < obj->vFace.size(); f++)
-      for (GLuint iv = 0; iv < 3; iv++)
-        obj->vFace[f]->indV[iv] -= minIndFace;
-
-  model3D.push_back(obj);
-
-  cout << "Finish loading OBJ model " << filename << "." << endl;
+	cout << "Finish loading OBJ model " << filename << "." << endl;
 }

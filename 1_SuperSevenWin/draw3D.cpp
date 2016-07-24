@@ -52,7 +52,6 @@ GLvoid generateColors() {
 }
 
 GLvoid buildModel() {
-
 	ObjectVA model3D_VA;
 	GLuint f, iv, v;
 	Point massCenter = { 0.0, 0.0, 0.0 };
@@ -175,13 +174,12 @@ GLboolean clockwise = true;
 GLvoid idle() {
 	++timer;
 	if (timer >= 1) {
-
 		if (randomcolors) {
 			generateColors();
 			glBindBuffer(GL_ARRAY_BUFFER, modelVBO[1]);
 			glBufferData(GL_ARRAY_BUFFER,
 				model3D[0]->vPoint.size() * 4 * sizeof(GLfloat), colors,
-				GL_STATIC_DRAW);
+				GL_STREAM_DRAW);
 		}
 
 		if (spin) {
@@ -208,7 +206,6 @@ GLvoid idle() {
 }
 
 GLvoid keyboard(GLubyte key, GLint x, GLint y) {
-
 	switch (key) {
 	case 27:
 		exit(0);
@@ -238,7 +235,6 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y) {
 }
 
 GLvoid display(GLvoid) {
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (drawRef) {
@@ -250,7 +246,6 @@ GLvoid display(GLvoid) {
 }
 
 GLvoid initGL() {
-
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 
 	if (glewInit()) {
@@ -335,9 +330,7 @@ GLvoid doCuda(){
 	return;
 }
 
-
 GLint main(GLint argc, GLchar *argv[]) {
-
 	srand(time(NULL));
 
 	glutInit(&argc, argv);

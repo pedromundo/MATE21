@@ -2,12 +2,11 @@
 in vec3 aPosition;
 in vec4 aColor;
 
-uniform int uAngle = 0;
-uniform mat4 uMVP;
-
 out vec4 vColor;
 
-const float M_PI = 3.14159265359;
+uniform int uAngle = 0;
+uniform mat4 uMVP;
+#define M_PI 3.14159265359
 
 float rotation = uAngle * (M_PI/180);
 mat4 RotationMatrix = mat4( cos(rotation), -sin(rotation), 0.0, 0.0,

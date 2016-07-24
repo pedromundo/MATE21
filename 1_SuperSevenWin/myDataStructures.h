@@ -7,50 +7,50 @@
 using namespace std;
 
 typedef struct {
-  GLfloat x;
-  GLfloat y;
-  GLfloat z;
+	GLfloat x;
+	GLfloat y;
+	GLfloat z;
 } Point;
 
 typedef struct {
-  GLfloat r;
-  GLfloat g;
-  GLfloat b;
-  GLfloat a;
+	GLfloat r;
+	GLfloat g;
+	GLfloat b;
+	GLfloat a;
 } Color;
 
 typedef struct {
-  Point pto;
-  Point normal;
-  GLint ID;
-  GLint valencia;
-  Color color;
+	Point pto;
+	Point normal;
+	GLint ID;
+	GLint valencia;
+	Color color;
 } Vertice;
 
 typedef struct {
-  GLint ID;
-  GLint indV[3];
-  Point normal;
+	GLint ID;
+	GLint indV[3];
+	Point normal;
 } Face;
 
 typedef struct {
-  GLint ID;
-  vector<Vertice *> vPoint;
-  vector<Face *> vFace;
+	GLint ID;
+	vector<Vertice *> vPoint;
+	vector<Face *> vFace;
 } Object;
 
 typedef struct {
-  GLfloat *vPoint;
-  GLfloat *vNormal;
-  GLfloat *vColor;
-  GLfloat *vTextCoord;
-  GLuint *vFace;
+	GLfloat *vPoint;
+	GLfloat *vNormal;
+	GLfloat *vColor;
+	GLfloat *vTextCoord;
+	GLuint *vFace;
 } ObjectVA;
 
 struct MyVertex {
-  GLfloat x, y, z;    // Vertex
-  GLfloat nx, ny, nz; // Normal
-  GLfloat s0, t0;     // Texcoord0
+	GLfloat x, y, z;    // Vertex
+	GLfloat nx, ny, nz; // Normal
+	GLfloat s0, t0;     // Texcoord0
 };
 
 #endif
