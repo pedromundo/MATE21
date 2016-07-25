@@ -33,7 +33,7 @@
   <ItemGroup>
     <ClInclude Include="dev_array.h" />
     <ClInclude Include="glm.h" />
-    <ClInclude Include="hello-world.h" />
+    <ClInclude Include="hello-world.cuh" />
     <ClInclude Include="initShaders.h" />
     <ClInclude Include="myDataStructures.h" />
     <ClInclude Include="readers.h" />

@@ -2,6 +2,8 @@
 #include <cfloat>
 #include <ctime>
 
+#include <iostream>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
@@ -10,12 +12,10 @@
 #include <GL/glew.h>
 #include <GL/glut.h>
 
-#include <iostream>
-
 #include "dev_array.h"
 #include "myDataStructures.h"
 #include "readers.h"
-#include "hello-world.h"
+#include "hello-world.cuh"
 
 using namespace std;
 
@@ -283,8 +283,8 @@ GLvoid doCuda(){
 	// Initialize matrices on the host
 	for (int i = 0; i < N; i++){
 		for (int j = 0; j < N; j++){
-			h_A[i*N + j] = sin(i);
-			h_B[i*N + j] = cos(j);
+			h_A[i*N + j] = (float)sin(i);
+			h_B[i*N + j] = (float)cos(j);
 		}
 	}
 
@@ -331,7 +331,7 @@ GLvoid doCuda(){
 }
 
 GLint main(GLint argc, GLchar *argv[]) {
-	srand(time(NULL));
+	srand((GLuint)time(NULL));
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
