@@ -29,8 +29,8 @@ void matrixMultiplication(float *A, float *B, float *C, int N){
 	if (N*N > 512){
 		threadsPerBlock.x = 512;
 		threadsPerBlock.y = 512;
-		blocksPerGrid.x = ceil(double(N) / double(threadsPerBlock.x));
-		blocksPerGrid.y = ceil(double(N) / double(threadsPerBlock.y));
+		blocksPerGrid.x = (unsigned short)ceil(double(N) / double(threadsPerBlock.x));
+		blocksPerGrid.y = (unsigned short)ceil(double(N) / double(threadsPerBlock.y));
 	}
 
 	matrixMultiplicationKernel << <blocksPerGrid, threadsPerBlock >> >(A, B, C, N);

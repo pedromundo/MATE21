@@ -1,9 +1,12 @@
+//Old C includes
 #include <cstdio>
 #include <cfloat>
 #include <ctime>
 
+//Cpp includes
 #include <iostream>
 
+//OpenGL Stuff
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
@@ -12,6 +15,13 @@
 #include <GL/glew.h>
 #include <GL/glut.h>
 
+//CUDA includes
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+#include <cuda_gl_interop.h>
+#include <helper_cuda.h>
+
+//My includes
 #include "dev_array.h"
 #include "myDataStructures.h"
 #include "readers.h"
@@ -317,7 +327,7 @@ GLvoid doCuda(){
 		}
 	}
 
-	double err = 0;
+	float err = 0;
 	// Check the result and make sure it is correct
 	for (int ROW = 0; ROW < N; ROW++){
 		for (int COL = 0; COL < N; COL++){
