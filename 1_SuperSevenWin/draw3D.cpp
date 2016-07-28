@@ -1,39 +1,31 @@
 //Old C includes
 #include <cstdio>
 #include <cfloat>
-#include <ctime>
 
 //Cpp includes
 #include <iostream>
 
 //OpenGL Stuff
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <SOIL.h>
 
 // CUDA standard includes
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <cufft.h>
-#include <helper_functions.h>
 #include <rendercheck_gl.h>
 #include <helper_cuda.h>
 #include <helper_cuda_gl.h>
 
 //My includes
 #include "defines.h"
-#include "dev_array.h"
 #include "myDataStructures.h"
-#include "readers.h"
 #include "hello-world.cuh"
 
 #define MAX_EPSILON_ERROR 1.0f
 
-const char *sSDKname = "fluidsGL";
 // CUDA example code that implements the frequency space version of
 // Jos Stam's paper 'Stable Fluids' in 2D. This application uses the
 // CUDA FFT library (CUFFT) to perform velocity diffusion and to
@@ -43,7 +35,7 @@ const char *sSDKname = "fluidsGL";
 // used for automatic bilinear interpolation at the velocity advection step.
 
 void cleanup(void);
-void reshape(int x, int y);
+void reshape(GLint x, GLint y);
 
 // CUFFT plan handle
 cufftHandle planr2c;
@@ -53,119 +45,123 @@ static cData *vyfield = NULL;
 
 cData *hvfield = NULL;
 cData *dvfield = NULL;
-static int wWidth = MAX(512, DIM);
-static int wHeight = MAX(512, DIM);
+static GLint wWidth = MAX(512, DIM);
+static GLint wHeight = MAX(512, DIM);
 
-static int clicked = 0;
+static GLint clicked = 0;
 
 // Particle data
 GLuint vbo = 0, colorsVBO = 0;                 // OpenGL vertex buffer object
 struct cudaGraphicsResource *cuda_vbo_resource; // handles OpenGL-CUDA exchange
 static cData *particles = NULL; // particle positions in host memory
-static int lastx = 0, lasty = 0;
+static GLint lastx = 0, lasty = 0;
 
 // Texture pitch
 size_t tPitch = 0; // Now this is compatible with gcc in 64-bit
 
-char *ref_file = NULL;
-bool g_bQAAddTestForce = true;
-int  g_iFrameToCompare = 100;
-int  g_TotalErrors = 0;
+GLchar *ref_file = NULL;
+GLboolean g_bQAAddTestForce = true;
+GLint  g_iFrameToCompare = 100;
+GLint  g_TotalErrors = 0;
 
-bool g_bExitESC = false;
+GLboolean g_bExitESC = false;
 
 // CheckFBO/BackBuffer class objects
 CheckRender       *g_CheckRender = NULL;
 
-void addForces(cData *v, int dx, int dy, int spx, int spy, float fx, float fy, int r);
-void advectVelocity(cData *v, float *vx, float *vy, int dx, int pdx, int dy, float dt);
-void diffuseProject(cData *vx, cData *vy, int dx, int dy, float dt, float visc);
-void updateVelocity(cData *v, float *vx, float *vy, int dx, int pdx, int dy);
-void advectParticles(GLuint vbo, cData *v, int dx, int dy, float dt);
+void addForces(cData *v, GLint dx, GLint dy, GLint spx, GLint spy, GLfloat fx, GLfloat fy, GLint r);
+void advectVelocity(cData *v, GLfloat *vx, GLfloat *vy, GLint dx, GLint pdx, GLint dy, GLfloat dt);
+void diffuseProject(cData *vx, cData *vy, GLint dx, GLint dy, GLfloat dt, GLfloat visc);
+void updateVelocity(cData *v, GLfloat *vx, GLfloat *vy, GLint dx, GLint pdx, GLint dy);
+void advectParticles(GLuint vbo, cData *v, GLint dx, GLint dy, GLfloat dt);
 
 GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile);
 
 GLuint axisShader;
 
-GLfloat *colors;
+GLfloat *colors, *chromaKeyingBase = new GLfloat[4]{1.0f, 0.0f, 0.0f, 1.0f}, *chromaKeyingDest = new GLfloat[4]{1.0f, 0.0f, 0.0f, 1.0f};
+GLubyte *image;
 
-GLvoid generateColors() {
-	colors = (GLfloat *)malloc(4 * DS * sizeof(GLfloat));
+void bindImage(){
+	GLint width, height;
+	image = SOIL_load_image("ultraseven.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	cout << SOIL_last_result() << endl;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+}
 
-	for (GLuint var = 0; var < 4 * DS; ++var) {
-		colors[var] = (GLfloat)rand() / RAND_MAX;
+void generateColor() {
+	chromaKeyingDest = (GLfloat *)malloc(4 * DS * sizeof(GLfloat));
+
+	for (GLuint var = 0; var < 4; ++var) {
+		chromaKeyingDest[var] = (GLfloat)rand() / RAND_MAX;
 	}
 }
 
 void simulateFluids(void)
 {
 	// simulate fluid
-	advectVelocity(dvfield, (float *)vxfield, (float *)vyfield, DIM, RPADW, DIM, DT);
+	advectVelocity(dvfield, (GLfloat *)vxfield, (GLfloat *)vyfield, DIM, RPADW, DIM, DT);
 	diffuseProject(vxfield, vyfield, CPADW, DIM, DT, VIS);
-	updateVelocity(dvfield, (float *)vxfield, (float *)vyfield, DIM, RPADW, DIM);
+	updateVelocity(dvfield, (GLfloat *)vxfield, (GLfloat *)vyfield, DIM, RPADW, DIM);
 	advectParticles(vbo, dvfield, DIM, DIM, DT);
 }
 
 glm::mat4 Model, View, Projection;
 glm::mat4 MVP = Projection * View * Model;
 
-GLvoid shaderPlumbing(){
-	glProgramUniformMatrix4fv(axisShader,
-		glGetUniformLocation(axisShader, "uMVP"), 1, false,
-		glm::value_ptr(MVP));
+void shaderPlumbing(){
+	glProgramUniformMatrix4fv(axisShader, glGetUniformLocation(axisShader, "uMVP"), 1, false, glm::value_ptr(MVP));
+	glProgramUniform4fv(axisShader, glGetUniformLocation(axisShader, "aChromaKeyingBase"), 1, chromaKeyingBase);
+	glProgramUniform4fv(axisShader, glGetUniformLocation(axisShader, "aChromaKeyingDest"), 1, chromaKeyingDest);
 
 	glPointSize(1);
-	
+
 	glEnableVertexAttribArray(glGetAttribLocation(axisShader, "aPosition"));
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(glGetAttribLocation(axisShader, "aPosition"), 2, GL_FLOAT, 0, 0, NULL);	
+	glVertexAttribPointer(glGetAttribLocation(axisShader, "aPosition"), 2, GL_FLOAT, 0, 0, NULL);
 	glDrawArrays(GL_POINTS, 0, DS);
 
 	glBindBuffer(GL_ARRAY_BUFFER, colorsVBO);
-	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(GLfloat)*DS, colors, GL_STREAM_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLubyte)*DS, image, GL_DYNAMIC_DRAW);
 
-	glVertexAttribPointer(glGetAttribLocation(axisShader, "aColor"), 2,
-		GL_FLOAT, GL_FALSE, 0, colors);
+	glVertexAttribPointer(glGetAttribLocation(axisShader, "aColor"), 3,
+		GL_UNSIGNED_BYTE, GL_FALSE, 0, image);
 	glEnableVertexAttribArray(glGetAttribLocation(axisShader, "aColor"));
 
-	glUnmapBuffer(GL_ARRAY_BUFFER);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
-
-
 
 void display(void)
 {
 	simulateFluids();
 
 	glClear(GL_COLOR_BUFFER_BIT);
-
 	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	shaderPlumbing();
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDisableClientState(GL_VERTEX_ARRAY);	
 	glDisable(GL_TEXTURE_2D);
 
 	// Finish timing before swap buffers to avoid refresh sync	
 	glutSwapBuffers();
-
 	glutPostRedisplay();
 }
 
-GLvoid initShaders() {
+void initShaders() {
 	axisShader = InitShader("axisShader.vert", "axisShader.frag");
+	glUseProgram(axisShader);
 }
 
 // very simple von neumann middle-square prng.  can't use rand() in -qatest
 // mode because its implementation varies across platforms which makes testing
 // for consistency in the important parts of this program difficult.
-float myrand(void)
+GLfloat myrand(void)
 {
-	static int seed = 72191;
-	char sq[22];
+	static GLint seed = 72191;
+	GLchar sq[22];
 
 	if (ref_file)
 	{
@@ -179,13 +175,13 @@ float myrand(void)
 	}
 	else
 	{
-		return rand() / (float)RAND_MAX;
+		return rand() / (GLfloat)RAND_MAX;
 	}
 }
 
-void initParticles(cData *p, int dx, int dy)
+void initParticles(cData *p, GLint dx, GLint dy)
 {
-	int i, j;
+	GLint i, j;
 
 	for (i = 0; i < dy; i++)
 	{
@@ -197,21 +193,7 @@ void initParticles(cData *p, int dx, int dy)
 	}
 }
 
-//void initParticles(cData *p, int dx, int dy)
-//{
-//	int i, j;
-//
-//	for (i = 0; i < dy; i++)
-//	{
-//		for (j = 0; j < dx; j++)
-//		{
-//			p[i*dx + j].x = (j + 0.5f + (myrand() - 0.5f)) / dx;
-//			p[i*dx + j].y = (i + 0.5f + (myrand() - 0.5f)) / dy;
-//		}
-//	}
-//}
-
-void keyboard(unsigned char key, int x, int y)
+void keyboard(GLubyte key, GLint x, GLint y)
 {
 	switch (key)
 	{
@@ -224,8 +206,12 @@ void keyboard(unsigned char key, int x, int y)
 		return;
 #endif
 		break;
-
+	case 'c':
+	case 'C':
+		generateColor();
+		break;
 	case 'r':
+	case 'R':
 		memset(hvfield, 0, sizeof(cData) * DS);
 		cudaMemcpy(dvfield, hvfield, sizeof(cData) * DS,
 			cudaMemcpyHostToDevice);
@@ -251,7 +237,7 @@ void keyboard(unsigned char key, int x, int y)
 	}
 }
 
-void click(int button, int updown, int x, int y)
+void click(GLint button, GLint updown, GLint x, GLint y)
 {
 	lastx = x;
 	lasty = y;
@@ -259,22 +245,22 @@ void click(int button, int updown, int x, int y)
 	clicked = !clicked;
 }
 
-void motion(int x, int y)
+void motion(GLint x, GLint y)
 {
 	// Convert motion coordinates to domain
-	float fx = (lastx / (float)wWidth);
-	float fy = (lasty / (float)wHeight);
-	int nx = (int)(fx * DIM);
-	int ny = (int)(fy * DIM);
+	GLfloat fx = (lastx / (GLfloat)wWidth);
+	GLfloat fy = (lasty / (GLfloat)wHeight);
+	GLint nx = (GLint)(fx * DIM);
+	GLint ny = (GLint)(fy * DIM);
 
 	if (clicked && nx < DIM - FR && nx > FR - 1 && ny < DIM - FR && ny > FR - 1)
 	{
-		int ddx = x - lastx;
-		int ddy = y - lasty;
-		fx = ddx / (float)wWidth;
-		fy = ddy / (float)wHeight;
-		int spy = ny - FR;
-		int spx = nx - FR;
+		GLint ddx = x - lastx;
+		GLint ddy = y - lasty;
+		fx = ddx / (GLfloat)wWidth;
+		fy = ddy / (GLfloat)wHeight;
+		GLint spy = ny - FR;
+		GLint spx = nx - FR;
 		addForces(dvfield, DIM, DIM, spx, spy, FORCE * DT * fx, FORCE * DT * fy, FR);
 		lastx = x;
 		lasty = y;
@@ -283,16 +269,11 @@ void motion(int x, int y)
 	glutPostRedisplay();
 }
 
-void reshape(int x, int y)
+void reshape(GLint x, GLint y)
 {
 	wWidth = x;
 	wHeight = y;
 	glViewport(0, 0, x, y);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, 1, 1, 0, 0, 1);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 	glutPostRedisplay();
 }
 
@@ -326,7 +307,7 @@ void cleanup(void)
 	}
 }
 
-int initGL(int *argc, char **argv)
+GLint initGL(GLint *argc, GLchar **argv)
 {
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -344,18 +325,14 @@ int initGL(int *argc, char **argv)
 }
 
 
-int main(int argc, char **argv)
+GLint main(GLint argc, GLchar **argv)
 {
-	int devID;
+	GLint devID;
 	cudaDeviceProp deviceProps;
 
 #if defined(__linux__)
 	setenv("DISPLAY", ":0", 0);
-#endif
-
-	printf("%s Starting...\n\n", sSDKname);
-
-	printf("NOTE: The CUDA Samples are not meant for performance measurements. Results may vary when GPU Boost is enabled.\n\n");
+#endif	
 
 	// First initialize OpenGL context, so we can properly set the GL for CUDA.
 	// This is necessary in order to achieve optimal performance with OpenGL/CUDA interop.
@@ -365,7 +342,7 @@ int main(int argc, char **argv)
 	}
 
 	// use command-line specified CUDA device, otherwise use device with highest Gflops/s
-	devID = findCudaGLDevice(argc, (const char **)argv);
+	devID = findCudaGLDevice(argc, (const GLchar **)argv);
 
 	// get number of SMs on this GPU
 	checkCudaErrors(cudaGetDeviceProperties(&deviceProps, devID));
@@ -373,26 +350,26 @@ int main(int argc, char **argv)
 		deviceProps.name, deviceProps.multiProcessorCount);
 
 	// automated build testing harness
-	if (checkCmdLineFlag(argc, (const char **)argv, "file"))
+	if (checkCmdLineFlag(argc, (const GLchar **)argv, "file"))
 	{
-		getCmdLineArgumentString(argc, (const char **)argv, "file", &ref_file);
+		getCmdLineArgumentString(argc, (const GLchar **)argv, "file", &ref_file);
 	}
 
 	// Allocate and initialize host data	
+	bindImage();
 	initShaders();
-	generateColors();
 
 	hvfield = (cData *)malloc(sizeof(cData) * DS);
 	memset(hvfield, 0, sizeof(cData) * DS);
 
 	// Allocate and initialize device data
-	cudaMallocPitch((void **)&dvfield, &tPitch, sizeof(cData)*DIM, DIM);
+	cudaMallocPitch((GLvoid **)&dvfield, &tPitch, sizeof(cData)*DIM, DIM);
 
 	cudaMemcpy(dvfield, hvfield, sizeof(cData) * DS,
 		cudaMemcpyHostToDevice);
 	// Temporary complex velocity field data
-	cudaMalloc((void **)&vxfield, sizeof(cData) * PDS);
-	cudaMalloc((void **)&vyfield, sizeof(cData) * PDS);
+	cudaMalloc((GLvoid **)&vxfield, sizeof(cData) * PDS);
+	cudaMalloc((GLvoid **)&vyfield, sizeof(cData) * PDS);
 
 	setupTexture(DIM, DIM);
 	bindTexture();
