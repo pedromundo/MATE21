@@ -33,7 +33,7 @@ texture<float2, 2> texref;
 static cudaArray *array = NULL;
 
 // Particle data
-extern GLuint modelVBO[3];                 // OpenGL vertex buffer object
+extern GLuint vbo;                 // OpenGL vertex buffer object
 extern struct cudaGraphicsResource *cuda_vbo_resource; // handles OpenGL-CUDA exchange
 
 // Texture pitch
@@ -299,7 +299,6 @@ float dt, int lb, size_t pitch)
 
 
 // These are the external function calls necessary for launching fluid simulation
-extern "C"
 void addForces(cData *v, int dx, int dy, int spx, int spy, float fx, float fy, int r)
 {
 
@@ -309,7 +308,6 @@ void addForces(cData *v, int dx, int dy, int spx, int spy, float fx, float fy, i
 	getLastCudaError("addForces_k failed.");
 }
 
-extern "C"
 void advectVelocity(cData *v, float *vx, float *vy, int dx, int pdx, int dy, float dt)
 {
 	dim3 grid((dx / TILEX) + (!(dx%TILEX) ? 0 : 1), (dy / TILEY) + (!(dy%TILEY) ? 0 : 1));
@@ -322,7 +320,6 @@ void advectVelocity(cData *v, float *vx, float *vy, int dx, int pdx, int dy, flo
 	getLastCudaError("advectVelocity_k failed.");
 }
 
-extern "C"
 void diffuseProject(cData *vx, cData *vy, int dx, int dy, float dt, float visc)
 {
 	// Forward FFT
@@ -341,7 +338,6 @@ void diffuseProject(cData *vx, cData *vy, int dx, int dy, float dt, float visc)
 	checkCudaErrors(cufftExecC2R(planc2r, (cufftComplex *)vy, (cufftReal *)vy));
 }
 
-extern "C"
 void updateVelocity(cData *v, float *vx, float *vy, int dx, int pdx, int dy)
 {
 	dim3 grid((dx / TILEX) + (!(dx%TILEX) ? 0 : 1), (dy / TILEY) + (!(dy%TILEY) ? 0 : 1));
@@ -351,7 +347,6 @@ void updateVelocity(cData *v, float *vx, float *vy, int dx, int pdx, int dy)
 	getLastCudaError("updateVelocity_k failed.");
 }
 
-extern "C"
 void advectParticles(GLuint vbo, cData *v, int dx, int dy, float dt)
 {
 	dim3 grid((dx / TILEX) + (!(dx%TILEX) ? 0 : 1), (dy / TILEY) + (!(dy%TILEY) ? 0 : 1));
