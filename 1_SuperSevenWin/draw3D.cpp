@@ -135,7 +135,7 @@ void shaderPlumbing(){
 void display(void)
 {
 	simulateFluids();
-
+	glClearColor(chromaKeyingDest[0], chromaKeyingDest[1], chromaKeyingDest[2], chromaKeyingDest[3]);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_BLEND);
