@@ -1,6 +1,7 @@
 //Old C includes
 #include <cstdio>
 #include <cfloat>
+#include <sys/stat.h>
 
 //Cpp includes
 #include <iostream>
@@ -23,6 +24,7 @@
 #include "defines.h"
 #include "myDataStructures.h"
 #include "hello-world.cuh"
+#include "initShaders.h"
 
 #define MAX_EPSILON_ERROR 1.0f
 
@@ -75,18 +77,22 @@ void diffuseProject(cData *vx, cData *vy, GLint dx, GLint dy, GLfloat dt, GLfloa
 void updateVelocity(cData *v, GLfloat *vx, GLfloat *vy, GLint dx, GLint pdx, GLint dy);
 void advectParticles(GLuint vbo, cData *v, GLint dx, GLint dy, GLfloat dt);
 
-GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile);
-
 GLuint axisShader;
 
 GLfloat *colors, *chromaKeyingBase = new GLfloat[4]{1.0f, 0.0f, 0.0f, 1.0f}, *chromaKeyingDest = new GLfloat[4]{1.0f, 0.0f, 0.0f, 1.0f};
 GLubyte *image;
 
-void bindImage(){
-	GLint width, height;
-	image = SOIL_load_image("ultraseven.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-	cout << SOIL_last_result() << endl;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+bool bindImage(const GLchar* imagePath){
+	struct stat buffer;		
+	if (stat(imagePath, &buffer) == 0){
+		GLint width, height;
+		image = SOIL_load_image(imagePath, &width, &height, 0, SOIL_LOAD_RGB);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		return strcmp(SOIL_last_result(), "Image loaded");
+	}
+	else{
+		false;
+	}
 }
 
 void generateColor() {
@@ -195,6 +201,7 @@ void initParticles(cData *p, GLint dx, GLint dy)
 
 void keyboard(GLubyte key, GLint x, GLint y)
 {
+	char* fileName = new char[255];
 	switch (key)
 	{
 	case 27:
@@ -205,6 +212,13 @@ void keyboard(GLubyte key, GLint x, GLint y)
 		glutDestroyWindow(glutGetWindow());
 		return;
 #endif
+		break;
+	case 'o':
+	case 'O':
+		cout << "Enter file name: ";
+		fflush(stdin);
+		cin >> fileName;
+		bindImage(fileName);
 		break;
 	case 'c':
 	case 'C':
@@ -327,6 +341,7 @@ GLint initGL(GLint *argc, GLchar **argv)
 
 GLint main(GLint argc, GLchar **argv)
 {
+	srand(_threadid);
 	GLint devID;
 	cudaDeviceProp deviceProps;
 
@@ -356,7 +371,7 @@ GLint main(GLint argc, GLchar **argv)
 	}
 
 	// Allocate and initialize host data	
-	bindImage();
+	bindImage("ultraseven.jpg");
 	initShaders();
 
 	hvfield = (cData *)malloc(sizeof(cData) * DS);

@@ -41,6 +41,9 @@
     <CudaCompile Include="hello-world.cu" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="carro.jpg" />
+    <Image Include="flor.jpg" />
+    <Image Include="house.jpg" />
     <Image Include="ultraseven.jpg" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -142,7 +145,7 @@ copy .\BinDepends\* "$(OutDir)"
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy ".\bindepends\*" "$(OutDir)"
-copy "ultraseven.jpg" "$(OutDir)"
+copy "*.jpg" "$(OutDir)"
 copy "axisShader.*" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
@@ -195,7 +198,7 @@ copy axisShader.* "$(OutDir)"
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy ".\bindepends\*" "$(OutDir)"
-copy "ultraseven.jpg" "$(OutDir)"
+copy "*.jpg" "$(OutDir)"
 copy "axisShader.*" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>

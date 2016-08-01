@@ -5,8 +5,8 @@ uniform vec4 aChromaKeyingDest;
 
 void main() {
     vec4 colorDiff = vColor - aChromaKeyingBase;
-    gl_FragColor = vColor;
+    gl_FragColor = vColor;	
 	if(length(colorDiff) < 0.6f){
-        gl_FragColor = aChromaKeyingDest;
+        gl_FragColor = vColor*0.5f + aChromaKeyingDest*0.5f;
     }
 }
