@@ -89,9 +89,8 @@ bool bindImage(const GLchar* imagePath){
 		image = SOIL_load_image(imagePath, &width, &height, 0, SOIL_LOAD_RGB);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 		return strcmp(SOIL_last_result(), "Image loaded");
-	}
-	else{
-		false;
+	}else{
+		return false;
 	}
 }
 
