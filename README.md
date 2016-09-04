@@ -30,6 +30,7 @@ Comprises several applications, each with their own dependencies:
  
 ### General workflow
 1. Capture a depth frame in DepthSaver by pressing S
-2. Run Depth2Mesh and follow and use the console interface to convert your depth image to a .xyz file
-3. Run PointProcessing and use the console window (not the openGL one) to process your point set and output an .obj file
-4. Open the generated .obj file in Meshlab and project your high-quality to the mesh as vertex color, generate a parametrization of the mesh with color information and then replace the generated parametrization with a properly aligned and scaled version of your high-quality texture.
+2. Clean your depth image up, remove outliers by painting them over with a black brush, a 1-2px gaussian blur filter also does wonders.
+3. Run Depth2Mesh and follow and use the console interface to convert your depth image to a .xyz file
+4. Run PointProcessing and use the console window (not the openGL one) to process your point set and output an .obj file
+5. Open the generated .obj file in Meshlab and project your high-quality to the mesh as vertex color, generate a parametrization of the mesh with color information and then replace the generated parametrization with a properly aligned and scaled version of your high-quality texture.
