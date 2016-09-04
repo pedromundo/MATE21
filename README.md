@@ -15,7 +15,7 @@ Comprises several applications, each with their own dependencies:
  - freeglut
  - SOIL
  - Kinect SDK (Kinect10.lib)
-- Depth2Mesh
+- Depth2Mesh (Further development at https://github.com/pedromundo/Depth2Mesh)
  - freeglut
  - SOIL
 - PointProcessing
