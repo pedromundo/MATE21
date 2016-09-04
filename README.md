@@ -10,7 +10,7 @@ You have to include/link against:
 - The usual cuda headers/libs (tested with 7.5, should work with anything not too old)
 
 ## Project 2 - Object Reconstruction
-Comprises several applications, each with their own dependencies:
+Comprises several applications, each with their own dependencies, the Bag folder has several possible input files, and a folder with a meshlab project and the achieved result (bag_nocolor.ply):
 - DepthSaver (Windows Only)
  - freeglut
  - SOIL
