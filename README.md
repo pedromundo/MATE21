@@ -18,11 +18,7 @@ Comprises several applications, each with their own dependencies, the Bag folder
 - Depth2Mesh (Further development at https://github.com/pedromundo/Depth2Mesh)
  - freeglut
  - SOIL
-- PointProcessing
- - freeglut
- - GLEW
- - GLM
- - SOIL
+- PointProcessing 
  - CGAL
  - EIGEN3
  - GMP (included in CGAL)
