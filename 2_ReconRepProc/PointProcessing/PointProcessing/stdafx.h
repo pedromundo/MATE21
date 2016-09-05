@@ -1,0 +1,25 @@
+//Cpp includes
+#include <iostream>
+#include <utility>
+#include <list>
+#include <vector>
+#include <fstream>
+#include <sstream>
+
+//CGAL STUff
+#include <CGAL/trace.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/IO/Polyhedron_iostream.h>
+#include <CGAL/Surface_mesh_default_triangulation_3.h>
+#include <CGAL/make_surface_mesh.h>
+#include <CGAL/Implicit_surface_3.h>
+#include <CGAL/IO/output_surface_facets_to_polyhedron.h>
+#include <CGAL/Poisson_reconstruction_function.h>
+#include <CGAL/Point_with_normal_3.h>
+#include <CGAL/compute_average_spacing.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/pca_estimate_normals.h>
+#include <CGAL/mst_orient_normals.h>
+#include <CGAL/property_map.h>
+#include <CGAL/IO/read_xyz_points.h>
+#include <CGAL/IO/print_wavefront.h>

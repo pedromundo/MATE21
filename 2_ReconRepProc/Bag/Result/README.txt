@@ -1,0 +1,2 @@
+The 20-30-1-bag.obj is the exact file that was produced by my PointProcessing tool, with this geometry I did NOT have to REMESH in Meshlab.
+I used Meshlab to convert this file to .ply because .ply files can keep texture information. The accompanying texture was cropped and edited from the picture in the ../RGB folder.
