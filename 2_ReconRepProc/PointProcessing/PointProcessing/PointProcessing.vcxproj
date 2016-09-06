@@ -110,9 +110,7 @@
       <AdditionalDependencies>libgmp-10.lib;libmpfr-4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy ".\bindepends\*" "$(OutDir)"
-copy "*.xyz" "$(OutDir)"
-copy "axisShader.*" "$(OutDir)"</Command>
+      <Command>copy ".\bindepends\*" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -155,10 +153,11 @@ copy "axisShader.*" "$(OutDir)"</Command>
       <AdditionalLibraryDirectories>C:\Libs\CGAL-4.9-beta1\lib;C:\Libs\boost_1_61_0\lib64-msvc-12.0;C:\Libs\CGAL-4.9-beta1\auxiliary\gmp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libgmp-10.lib;libmpfr-4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy ".\bindepends\*" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="axisShader.frag" />
-    <None Include="axisShader.vert" />
     <None Include="bag_mesh_best.xyz" />
   </ItemGroup>
   <ItemGroup>
