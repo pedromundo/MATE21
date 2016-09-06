@@ -9,9 +9,10 @@ You have to include/link against:
 - CUDA
 - The usual cuda headers/libs (tested with 7.5, should work with anything not too old)
 
-## Project 2 - Object Reconstruction
-Comprises several applications, each with their own dependencies, the Bag folder has several possible input files, and a folder with a meshlab project and the achieved result:
+## Project 2 - Reconstruction Toolkit
+A set of toolss, each with their own dependencies to reconstruct 3D models from Kinect depth maps. The Bag folder ha  possible input files, and a folder with a meshlab project and the achieved result, the dependencies are as follows:
 - DepthSaver (Windows Only)
+ - GLEW
  - freeglut
  - SOIL
  - Kinect SDK (Kinect10.lib)
@@ -29,4 +30,4 @@ Comprises several applications, each with their own dependencies, the Bag folder
 2. Clean your depth image up, remove outliers by painting them over with a black brush, a 1-2px gaussian blur filter also does wonders.
 3. Run Depth2Mesh and follow and use the console interface to convert your depth image to a .xyz file
 4. Run PointProcessing and use the console window (not the openGL one) to process your point set and output an .obj file
-5. Open the generated .obj file in Meshlab and project your high-quality to the mesh as vertex color, generate a parametrization of the mesh with color information and then replace the generated parametrization with a properly aligned and scaled version of your high-quality texture.
+5. Open the generated .obj file in Meshlab and project your high-quality texture to the mesh as vertex color, generate a parametrization of the mesh with color information and then replace the generated parametrization with a properly aligned and scaled version of your high-quality texture.

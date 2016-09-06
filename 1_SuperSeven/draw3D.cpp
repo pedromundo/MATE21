@@ -53,7 +53,7 @@ static GLint wHeight = MAX(512, DIM);
 static GLint clicked = 0;
 
 // Particle data
-GLuint vbo = 0, colorsVBO = 0;                 // OpenGL vertex buffer object
+GLuint VertexArrayIDs[1], vertexbuffers[2];                 // OpenGL vertex buffer object
 struct cudaGraphicsResource *cuda_vbo_resource; // handles OpenGL-CUDA exchange
 static cData *particles = NULL; // particle positions in host memory
 static GLint lastx = 0, lasty = 0;
@@ -108,7 +108,7 @@ void simulateFluids(void)
 	advectVelocity(dvfield, (GLfloat *)vxfield, (GLfloat *)vyfield, DIM, RPADW, DIM, DT);
 	diffuseProject(vxfield, vyfield, CPADW, DIM, DT, VIS);
 	updateVelocity(dvfield, (GLfloat *)vxfield, (GLfloat *)vyfield, DIM, RPADW, DIM);
-	advectParticles(vbo, dvfield, DIM, DIM, DT);
+	advectParticles(vertexbuffers[0], dvfield, DIM, DIM, DT);
 }
 
 glm::mat4 Model, View, Projection;
@@ -119,19 +119,19 @@ void shaderPlumbing(){
 	glProgramUniform4fv(axisShader, glGetUniformLocation(axisShader, "aChromaKeyingBase"), 1, chromaKeyingBase);
 	glProgramUniform4fv(axisShader, glGetUniformLocation(axisShader, "aChromaKeyingDest"), 1, chromaKeyingDest);
 
-	glPointSize(1);
+	glPointSize(2);
 
+	glBindVertexArray(VertexArrayIDs[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);	
 	glEnableVertexAttribArray(glGetAttribLocation(axisShader, "aPosition"));
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(glGetAttribLocation(axisShader, "aPosition"), 2, GL_FLOAT, 0, 0, NULL);
+	glVertexAttribPointer(glGetAttribLocation(axisShader, "aPosition"), 2, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 	glDrawArrays(GL_POINTS, 0, DS);
+	
 
-	glBindBuffer(GL_ARRAY_BUFFER, colorsVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[1]);
 	glBufferData(GL_ARRAY_BUFFER, 3 * sizeof(GLubyte)*DS, image, GL_DYNAMIC_DRAW);
-
-	glVertexAttribPointer(glGetAttribLocation(axisShader, "aColor"), 3,
-		GL_UNSIGNED_BYTE, GL_FALSE, 0, image);
 	glEnableVertexAttribArray(glGetAttribLocation(axisShader, "aColor"));
+	glVertexAttribPointer(glGetAttribLocation(axisShader, "aColor"), 3, GL_UNSIGNED_BYTE, GL_FALSE, 0, (GLvoid*)0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -235,12 +235,12 @@ void keyboard(GLubyte key, GLint x, GLint y)
 
 		getLastCudaError("cudaGraphicsUnregisterBuffer failed");
 
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(cData) * DS,
 			particles, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		cudaGraphicsGLRegisterBuffer(&cuda_vbo_resource, vbo, cudaGraphicsMapFlagsNone);
+		cudaGraphicsGLRegisterBuffer(&cuda_vbo_resource, vertexbuffers[0], cudaGraphicsMapFlagsNone);
 
 		getLastCudaError("cudaGraphicsGLRegisterBuffer failed");
 		break;
@@ -307,7 +307,7 @@ void cleanup(void)
 	cufftDestroy(planc2r);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &vertexbuffers[0]);
 
 	if (g_bExitESC)
 	{
@@ -402,14 +402,16 @@ GLint main(GLint argc, GLchar **argv)
 	cufftSetCompatibilityMode(planr2c, CUFFT_COMPATIBILITY_FFTW_PADDING);
 	cufftSetCompatibilityMode(planc2r, CUFFT_COMPATIBILITY_FFTW_PADDING);
 
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glGenVertexArrays(1, VertexArrayIDs);
+	glGenBuffers(2, vertexbuffers);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cData) * DS,
 		particles, GL_DYNAMIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resource, vbo, cudaGraphicsMapFlagsNone));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resource, vertexbuffers[0], cudaGraphicsMapFlagsNone));
 
 	getLastCudaError("cudaGraphicsGLRegisterBuffer failed");
 
