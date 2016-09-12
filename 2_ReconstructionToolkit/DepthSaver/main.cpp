@@ -264,7 +264,7 @@ GLint main(GLint argc, GLchar **argv)
 	cout << "Hang on... trying to find a ready Kinect sensor..." << endl;
 
 	// Look at each Kinect sensor
-	for (GLuint i = 0; i < iSensorCount; ++i)
+	for (GLint i = 0; i < iSensorCount; ++i)
 	{
 		// Create the sensor so we can check status, if we can't create it, move on to the next
 		hr = NuiCreateSensorByIndex(i, &pNuiSensor);
