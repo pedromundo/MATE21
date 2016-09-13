@@ -10,7 +10,7 @@ You have to include/link against:
 - The usual cuda headers/libs (tested with 7.5, should work with anything not too old)
 
 ## Project 2 - Reconstruction Toolkit
-A set of tools, each with their own dependencies to reconstruct 3D models from Kinect depth maps. The Bag folder ha  possible input files, and a folder with a meshlab project and the achieved result, the dependencies are as follows:
+A set of tools, each with their own dependencies to reconstruct 3D models from Kinect depth maps. The Bag folder has possible input files, and a folder with a meshlab project and the achieved results, the dependencies are as follows:
 - DepthSaver (Windows Only)
  - GLEW
  - freeglut
