@@ -1,13 +1,11 @@
 #version 400
 in vec3 aPosition;
-in vec4 aColor;
 in vec2 vertTexCoord;
-out vec4 vColor;
 out vec2 fragTexCoord;
 uniform mat4 MVP;
+uniform mat3 MV;
 
-void main() {    
-    vColor = aColor;
-    fragTexCoord = vertTexCoord;
+void main() {        
+    fragTexCoord = vec2(vertTexCoord.x,1-vertTexCoord.y);
 	gl_Position = MVP * vec4(aPosition,1);
 }

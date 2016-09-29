@@ -10,7 +10,9 @@ typedef struct {
 	GLfloat x;
 	GLfloat y;
 	GLfloat z;
-} Point;
+	GLfloat u;
+	GLfloat v;
+} Vertex;
 
 typedef struct {
 	GLfloat r;
@@ -31,7 +33,9 @@ typedef struct {
 } Normal;
 
 typedef struct {	
-	GLuint idVertices[3];	
+	GLuint f1;	
+	GLuint f2;
+	GLuint f3;
 } Face;
 
 #define printOpenGLError() printOglError(__FILE__, __LINE__)
