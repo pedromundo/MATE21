@@ -31,7 +31,7 @@ GLuint VertexArrayIDs[1], vertexbuffers[4], textureArrays[1];
 glm::mat4 Projection, View, Model;
 
 //Using std::vector because no one wants to work with arrays in 2016
-std::vector<Vertex> *points = new std::vector<Vertex>();
+std::vector<Vertex> *vertices = new std::vector<Vertex>();
 std::vector<Face> *faces = new std::vector<Face>();
 /*std::vector<glm::vec3>* tangents = new std::vector<glm::vec3>();
 std::vector<glm::vec3>* bitangents = new std::vector<glm::vec3>();*/
@@ -45,9 +45,9 @@ GLubyte* normalmap;
 	std::map<GLuint, glm::vec3> *bitans = new std::map<GLuint, glm::vec3>;
 	for (int i = 0; i < faces->size(); ++i){
 		// Shortcuts for vertices
-		Vertex a = points->at(faces->at(i).f1);
-		Vertex b = points->at(faces->at(i).f2);
-		Vertex c = points->at(faces->at(i).f3);
+		Vertex a = vertices->at(faces->at(i).f1);
+		Vertex b = vertices->at(faces->at(i).f2);
+		Vertex c = vertices->at(faces->at(i).f3);
 
 		glm::vec3 & v0 = glm::vec3(a.x, a.y, a.z);
 		glm::vec3 & v1 = glm::vec3(b.x, b.y, b.z);
@@ -97,7 +97,7 @@ GLvoid shaderPlumbing(){
 	glBindVertexArray(VertexArrayIDs[0]);
 	//position data
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
-	glBufferData(GL_ARRAY_BUFFER, 5 * sizeof(GLfloat)*nvertices, points->data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 7 * sizeof(GLfloat)*nvertices, vertices->data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "aPosition"));
 	glVertexAttribPointer(glGetAttribLocation(basicShader, "aPosition"), 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertTexCoord"));
@@ -195,7 +195,7 @@ int vertex_cb(p_ply_argument argument) {
 		break;
 	case 2:
 		tempPoint.z = ply_get_argument_value(argument);
-		points->push_back(tempPoint);
+		vertices->push_back(tempPoint);
 		break;
 	default:
 		break;
@@ -227,22 +227,22 @@ int face_cb(p_ply_argument argument) {
 	else if (length == 6){
 		switch (value_index) {
 		case 0:
-			points->at(tempFace.f1).u = ply_get_argument_value(argument);
+			vertices->at(tempFace.f1).uv.u = ply_get_argument_value(argument);
 			break;
 		case 1:
-			points->at(tempFace.f1).v = ply_get_argument_value(argument);
+			vertices->at(tempFace.f1).uv.v = ply_get_argument_value(argument);
 			break;
 		case 2:
-			points->at(tempFace.f2).u = ply_get_argument_value(argument);
+			vertices->at(tempFace.f2).uv.u = ply_get_argument_value(argument);
 			break;
 		case 3:
-			points->at(tempFace.f2).v = ply_get_argument_value(argument);
+			vertices->at(tempFace.f2).uv.v = ply_get_argument_value(argument);
 			break;
 		case 4:
-			points->at(tempFace.f3).u = ply_get_argument_value(argument);
+			vertices->at(tempFace.f3).uv.u = ply_get_argument_value(argument);
 			break;
 		case 5:
-			points->at(tempFace.f3).v = ply_get_argument_value(argument);
+			vertices->at(tempFace.f3).uv.v = ply_get_argument_value(argument);
 			break;
 		default:
 			break;
@@ -256,11 +256,11 @@ GLint main(GLint argc, GLchar **argv)
 	//Setting up our MVP Matrices
 	Model = glm::mat4(1.0f);
 	View = glm::lookAt(
-		glm::vec3(1.5, 1.5, 1.5),
+		glm::vec3(1.2, 1.2, 1.2),
 		glm::vec3(0, 0, 0),
 		glm::vec3(0, 1, 0)
 		);
-	Projection = glm::perspective(glm::radians(45.0f), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
+	Projection = glm::perspective(glm::radians(60.0f), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
 
 	texture = SOIL_load_image("bag_tex.png", &wTex, &hTex, &cTex, SOIL_LOAD_RGB);
 	normalmap = SOIL_load_image("bag_normal.png", &wNor, &hNor, &cNor, SOIL_LOAD_RGB);

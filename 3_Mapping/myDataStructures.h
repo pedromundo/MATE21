@@ -7,14 +7,6 @@
 using namespace std;
 
 typedef struct {
-	GLfloat x;
-	GLfloat y;
-	GLfloat z;
-	GLfloat u;
-	GLfloat v;
-} Vertex;
-
-typedef struct {
 	GLfloat r;
 	GLfloat g;
 	GLfloat b;
@@ -31,6 +23,13 @@ typedef struct {
 	GLfloat ny;
 	GLfloat nz;
 } Normal;
+
+typedef struct {
+	GLfloat x;
+	GLfloat y;
+	GLfloat z;
+	TexCoord uv;	
+} Vertex;
 
 typedef struct {	
 	GLuint f1;	
