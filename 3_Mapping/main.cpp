@@ -26,23 +26,18 @@ GLulong nvertices, ntriangles;
 //Texture properties
 int wTex, hTex, cTex, wNor, hNor, cNor;
 //Handlers for the VBO and FBOs
-GLuint VertexArrayIDs[1], vertexbuffers[4], textureArrays[1];
+GLuint VertexArrayIDs[1], vertexbuffers[2], textureArrays[2];
 //MVP Matrices
 glm::mat4 Projection, View, Model;
 
 //Using std::vector because no one wants to work with arrays in 2016
 std::vector<Vertex> *vertices = new std::vector<Vertex>();
 std::vector<Face> *faces = new std::vector<Face>();
-/*std::vector<glm::vec3>* tangents = new std::vector<glm::vec3>();
-std::vector<glm::vec3>* bitangents = new std::vector<glm::vec3>();*/
-
 
 GLubyte* texture;
 GLubyte* normalmap;
 
-/*void computeTangentBasis(){
-	std::map<GLuint, glm::vec3> *tans = new std::map<GLuint, glm::vec3>;
-	std::map<GLuint, glm::vec3> *bitans = new std::map<GLuint, glm::vec3>;
+void computeTangentBasis(){
 	for (int i = 0; i < faces->size(); ++i){
 		// Shortcuts for vertices
 		Vertex a = vertices->at(faces->at(i).f1);
@@ -54,9 +49,9 @@ GLubyte* normalmap;
 		glm::vec3 & v2 = glm::vec3(c.x, c.y, c.z);
 
 		// Shortcuts for UVs
-		glm::vec2 & uv0 = glm::vec2(a.u, a.v);
-		glm::vec2 & uv1 = glm::vec2(b.u, b.v);
-		glm::vec2 & uv2 = glm::vec2(c.u, c.v);
+		glm::vec2 & uv0 = glm::vec2(a.uv.u, a.uv.v);
+		glm::vec2 & uv1 = glm::vec2(b.uv.u, b.uv.v);
+		glm::vec2 & uv2 = glm::vec2(c.uv.u, c.uv.v);
 
 		// Edges of the triangle : postion delta
 		glm::vec3 deltaPos1 = v1 - v0;
@@ -68,19 +63,16 @@ GLubyte* normalmap;
 		float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
 		glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y)*r;
 		glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x)*r;
-		// Set the same tangent for all three vertices of the triangle.
-		// They will be merged later, in vboindexer.cpp		
-		tans->insert(std::map<GLuint, glm::vec3>::value_type(faces->at(i).f1, tangent));
-		tans->insert(std::map<GLuint, glm::vec3>::value_type(faces->at(i).f2, tangent));
-		tans->insert(std::map<GLuint, glm::vec3>::value_type(faces->at(i).f3, tangent));
+		// Set the same tangent for all three vertices of the triangle.	
+		vertices->at(faces->at(i).f1).tan = tangent;
+		vertices->at(faces->at(i).f2).tan = tangent;
+		vertices->at(faces->at(i).f3).tan = tangent;
 		// Same thing for binormals
-		tans->insert(std::map<GLuint, glm::vec3>::value_type(faces->at(i).f1, bitangent));
-		tans->insert(std::map<GLuint, glm::vec3>::value_type(faces->at(i).f2, bitangent));
-		tans->insert(std::map<GLuint, glm::vec3>::value_type(faces->at(i).f3, bitangent));
+		vertices->at(faces->at(i).f1).bin = bitangent;
+		vertices->at(faces->at(i).f2).bin = bitangent;
+		vertices->at(faces->at(i).f3).bin = bitangent;
 	}
-
-	delete tans, bitans;
-}*/
+}
 
 GLvoid shaderPlumbing(){
 	printOpenGLError();
@@ -89,19 +81,36 @@ GLvoid shaderPlumbing(){
 
 	//MVP matrix	
 	GLuint MVPId = glGetUniformLocation(basicShader, "MVP");
-	GLuint MVId = glGetUniformLocation(basicShader, "MV");
 	glUniformMatrix4fv(MVPId, 1, GL_FALSE, glm::value_ptr(Projection * View * Model));
+	//MV matrix 
+	GLuint MVId = glGetUniformLocation(basicShader, "MV");
 	glUniformMatrix3fv(MVId, 1, GL_FALSE, glm::value_ptr(glm::mat3(View * Model)));
 	printOpenGLError();
+	//V Matrix
+	GLuint MId = glGetUniformLocation(basicShader, "M");
+	glUniformMatrix3fv(MId, 1, GL_FALSE, glm::value_ptr(glm::mat3(Model)));
+	printOpenGLError();
+	//Light position
+	glm::vec3 lightPos = glm::vec3(0, 0.2, 1);
+	GLuint lightID = glGetUniformLocation(basicShader, "lightPos");
+	glUniform3f(lightID, lightPos.x, lightPos.y, lightPos.z);
+
+	std::size_t vertexSize = (3 * sizeof(GLfloat) + 3 * sizeof(GLfloat) + 2 * sizeof(GLfloat) + 2 * sizeof(glm::vec3));
 
 	glBindVertexArray(VertexArrayIDs[0]);
 	//position data
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
-	glBufferData(GL_ARRAY_BUFFER, 7 * sizeof(GLfloat)*nvertices, vertices->data(), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "aPosition"));
-	glVertexAttribPointer(glGetAttribLocation(basicShader, "aPosition"), 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+	glBufferData(GL_ARRAY_BUFFER, vertexSize*nvertices, vertices->data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "Position_modelspace"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "Position_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (GLvoid*)0);
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertNormal_modelspace"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertNormal_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertTexCoord"));
-	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertTexCoord"), 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (const GLvoid*)(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertTexCoord"), 2, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertTangent_modelspace"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertTangent_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(8 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertBinormal_modelspace"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertBinormal_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(11 * sizeof(GLfloat)));
 	printOpenGLError();
 
 	//Element vertex IDs data
@@ -195,6 +204,15 @@ int vertex_cb(p_ply_argument argument) {
 		break;
 	case 2:
 		tempPoint.z = ply_get_argument_value(argument);
+		break;
+	case 3:
+		tempPoint.normal.nx = ply_get_argument_value(argument);
+		break;
+	case 4:
+		tempPoint.normal.ny = ply_get_argument_value(argument);
+		break;
+	case 5:
+		tempPoint.normal.nz = ply_get_argument_value(argument);
 		vertices->push_back(tempPoint);
 		break;
 	default:
@@ -262,20 +280,24 @@ GLint main(GLint argc, GLchar **argv)
 		);
 	Projection = glm::perspective(glm::radians(60.0f), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
 
-	texture = SOIL_load_image("bag_tex.png", &wTex, &hTex, &cTex, SOIL_LOAD_RGB);
-	normalmap = SOIL_load_image("bag_normal.png", &wNor, &hNor, &cNor, SOIL_LOAD_RGB);
-
 	//Read model from .ply file	
 	p_ply ply = ply_open("bag.ply", NULL, 0, NULL);
 	if (!ply) return EXIT_FAILURE;
 	if (!ply_read_header(ply)) return EXIT_FAILURE;
 	nvertices = ply_set_read_cb(ply, "vertex", "x", vertex_cb, NULL, 0);
 	ply_set_read_cb(ply, "vertex", "y", vertex_cb, NULL, 1);
-	ply_set_read_cb(ply, "vertex", "z", vertex_cb, NULL, 2);	
+	ply_set_read_cb(ply, "vertex", "z", vertex_cb, NULL, 2);
+	ply_set_read_cb(ply, "vertex", "nx", vertex_cb, NULL, 3);
+	ply_set_read_cb(ply, "vertex", "ny", vertex_cb, NULL, 4);
+	ply_set_read_cb(ply, "vertex", "nz", vertex_cb, NULL, 5);
 	ntriangles = ply_set_read_cb(ply, "face", "vertex_indices", face_cb, NULL, 0);
 	ply_set_read_cb(ply, "face", "texcoord", face_cb, NULL, 1);
 	if (!ply_read(ply)) return EXIT_FAILURE;
 	ply_close(ply);
+
+	//Read textures from files
+	texture = SOIL_load_image("bag_tex.png", &wTex, &hTex, &cTex, SOIL_LOAD_RGB);
+	normalmap = SOIL_load_image("bag_normal.png", &wNor, &hNor, &cNor, SOIL_LOAD_RGB);
 
 #if defined(__linux__)
 	setenv("DISPLAY", ":0", 0);
@@ -286,12 +308,11 @@ GLint main(GLint argc, GLchar **argv)
 		return EXIT_FAILURE;
 	}
 
-	//computeTangentBasis();
-
 	glGenVertexArrays(1, VertexArrayIDs);
 	glGenBuffers(2, vertexbuffers);
-	glGenTextures(1, textureArrays);
+	glGenTextures(2, textureArrays);
 
+	computeTangentBasis();
 	initShaders();
 
 	//Texture data		
@@ -303,6 +324,16 @@ GLint main(GLint argc, GLchar **argv)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wTex, hTex, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
 	glUniform1i(glGetUniformLocation(basicShader, "tex"), 0);
+
+	//Normal data
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, textureArrays[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wTex, hTex, 0, GL_RGB, GL_UNSIGNED_BYTE, normalmap);
+	glUniform1i(glGetUniformLocation(basicShader, "nor"), 1);
 	printOpenGLError();
 
 	glutMainLoop();

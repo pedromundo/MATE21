@@ -28,7 +28,10 @@ typedef struct {
 	GLfloat x;
 	GLfloat y;
 	GLfloat z;
+	Normal normal;
 	TexCoord uv;	
+	glm::vec3 tan;
+	glm::vec3 bin;
 } Vertex;
 
 typedef struct {	
