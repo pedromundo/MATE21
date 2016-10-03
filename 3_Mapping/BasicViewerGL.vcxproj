@@ -31,6 +31,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="basicShader.frag" />
+    <None Include="basicShader.geom" />
+    <None Include="basicShader.tesc" />
+    <None Include="basicShader.tese" />
     <None Include="basicShader.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

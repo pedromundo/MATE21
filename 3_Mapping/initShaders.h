@@ -18,6 +18,6 @@ typedef struct Shader {
 
 static GLchar *readShaderSource(const GLchar *shaderFile);
 
-GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile);
+GLuint InitShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *tcShaderFile, const GLchar *teShaderFile, const GLchar *gShaderFile);
 
 #endif //__INIT_SHADERS__

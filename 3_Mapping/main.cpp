@@ -15,7 +15,7 @@
 
 GLvoid reshape(GLint x, GLint y);
 
-GLboolean g_bExitESC = false;
+GLboolean g_bExitESC = false, g_bRotateModel = false;
 
 //Shader Program Handle
 GLuint basicShader;
@@ -24,9 +24,9 @@ GLuint wWidth = 640, wHeight = 480;
 //# of vertices and tris
 GLulong nvertices, ntriangles;
 //Texture properties
-int wTex, hTex, cTex, wNor, hNor, cNor;
+int wTex, hTex, cTex, wNor, hNor, cNor, wHei, hHei, cHei;
 //Handlers for the VBO and FBOs
-GLuint VertexArrayIDs[1], vertexbuffers[2], textureArrays[2];
+GLuint VertexArrayIDs[1], vertexbuffers[2], textureArrays[3];
 //MVP Matrices
 glm::mat4 Projection, View, Model;
 
@@ -36,6 +36,7 @@ std::vector<Face> *faces = new std::vector<Face>();
 
 GLubyte* texture;
 GLubyte* normalmap;
+GLubyte* heightmap;
 
 void computeTangentBasis(){
 	for (int i = 0; i < faces->size(); ++i){
@@ -91,9 +92,10 @@ GLvoid shaderPlumbing(){
 	glUniformMatrix3fv(MId, 1, GL_FALSE, glm::value_ptr(glm::mat3(Model)));
 	printOpenGLError();
 	//Light position
-	glm::vec3 lightPos = glm::vec3(0, 0.2, 1);
+	glm::vec3 lightPos = glm::vec3(0.0, 0.5, 1.0);
 	GLuint lightID = glGetUniformLocation(basicShader, "lightPos");
 	glUniform3f(lightID, lightPos.x, lightPos.y, lightPos.z);
+	printOpenGLError();
 
 	std::size_t vertexSize = (3 * sizeof(GLfloat) + 3 * sizeof(GLfloat) + 2 * sizeof(GLfloat) + 2 * sizeof(glm::vec3));
 
@@ -101,16 +103,16 @@ GLvoid shaderPlumbing(){
 	//position data
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
 	glBufferData(GL_ARRAY_BUFFER, vertexSize*nvertices, vertices->data(), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "Position_modelspace"));
-	glVertexAttribPointer(glGetAttribLocation(basicShader, "Position_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (GLvoid*)0);
-	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertNormal_modelspace"));
-	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertNormal_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertTexCoord"));
-	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertTexCoord"), 2, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(6 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertTangent_modelspace"));
-	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertTangent_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(8 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "vertBinormal_modelspace"));
-	glVertexAttribPointer(glGetAttribLocation(basicShader, "vertBinormal_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(11 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "appPosition_modelspace"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "appPosition_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (GLvoid*)0);
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "appNormal_modelspace"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "appNormal_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(3 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "appTexCoord"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "appTexCoord"), 2, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(6 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "appTangent_modelspace"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "appTangent_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(8 * sizeof(GLfloat)));
+	glEnableVertexAttribArray(glGetAttribLocation(basicShader, "appBinormal_modelspace"));
+	glVertexAttribPointer(glGetAttribLocation(basicShader, "appBinormal_modelspace"), 3, GL_FLOAT, GL_FALSE, vertexSize, (const GLvoid*)(11 * sizeof(GLfloat)));
 	printOpenGLError();
 
 	//Element vertex IDs data
@@ -120,6 +122,7 @@ GLvoid shaderPlumbing(){
 }
 
 GLvoid display(GLvoid){
+	printOpenGLError();
 	glClearColor(0.3f, 0.3f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_POINT_SMOOTH);
@@ -130,15 +133,17 @@ GLvoid display(GLvoid){
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	shaderPlumbing();
 
-	glDrawElements(GL_TRIANGLES, 3 * ntriangles, GL_UNSIGNED_INT, (void*)0);
+	glDrawElements(GL_PATCHES, 3 * ntriangles, GL_UNSIGNED_INT, (void*)0);
+	printOpenGLError();
 
-	glutSwapBuffers();
-	glutPostRedisplay();
+	glutSwapBuffers();	
+	glutPostRedisplay();	
 }
 
 GLvoid initShaders() {
-	basicShader = InitShader("basicShader.vert", "basicShader.frag");
+	basicShader = InitShader("basicShader.vert", "basicShader.frag", "basicShader.tesc", "basicShader.tese", "basicShader.geom");
 	glUseProgram(basicShader);
+	printOpenGLError();
 }
 
 GLvoid keyboard(GLubyte key, GLint x, GLint y)
@@ -154,6 +159,10 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y)
 		return;
 #endif
 		break;
+	case 'r':
+	case 'R':
+		g_bRotateModel = !g_bRotateModel;
+		break;
 	default:
 		break;
 	}
@@ -168,7 +177,9 @@ GLvoid reshape(GLint x, GLint y)
 }
 
 GLvoid process(GLvoid){
-	View = glm::rotate(View, 0.01f, glm::vec3(0.0, 1.0, 0.0));
+	if (g_bRotateModel){
+		View = glm::rotate(View, 0.01f, glm::vec3(0.0, 1.0, 0.0));
+	}
 }
 
 GLint initGL(GLint *argc, GLchar **argv)
@@ -177,7 +188,7 @@ GLint initGL(GLint *argc, GLchar **argv)
 	glutIdleFunc(process);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(wWidth, wHeight);
-	glutCreateWindow("OpenGL Viewer Scaffold");
+	glutCreateWindow("OpenGL Viewer Scaffold");	
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
@@ -274,7 +285,7 @@ GLint main(GLint argc, GLchar **argv)
 	//Setting up our MVP Matrices
 	Model = glm::mat4(1.0f);
 	View = glm::lookAt(
-		glm::vec3(1.2, 1.2, 1.2),
+		glm::vec3(0, 1, 2),
 		glm::vec3(0, 0, 0),
 		glm::vec3(0, 1, 0)
 		);
@@ -298,6 +309,7 @@ GLint main(GLint argc, GLchar **argv)
 	//Read textures from files
 	texture = SOIL_load_image("bag_tex.png", &wTex, &hTex, &cTex, SOIL_LOAD_RGB);
 	normalmap = SOIL_load_image("bag_normal.png", &wNor, &hNor, &cNor, SOIL_LOAD_RGB);
+	heightmap = SOIL_load_image("bag_dis.png", &wHei, &hHei, &cHei, SOIL_LOAD_RGB);
 
 #if defined(__linux__)
 	setenv("DISPLAY", ":0", 0);
@@ -310,7 +322,7 @@ GLint main(GLint argc, GLchar **argv)
 
 	glGenVertexArrays(1, VertexArrayIDs);
 	glGenBuffers(2, vertexbuffers);
-	glGenTextures(2, textureArrays);
+	glGenTextures(3, textureArrays);
 
 	computeTangentBasis();
 	initShaders();
@@ -332,8 +344,19 @@ GLint main(GLint argc, GLchar **argv)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wTex, hTex, 0, GL_RGB, GL_UNSIGNED_BYTE, normalmap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wNor, hNor, 0, GL_RGB, GL_UNSIGNED_BYTE, normalmap);
 	glUniform1i(glGetUniformLocation(basicShader, "nor"), 1);
+	printOpenGLError();
+
+	//Height data
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, textureArrays[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wHei, hHei, 0, GL_RGB, GL_UNSIGNED_BYTE, heightmap);
+	glUniform1i(glGetUniformLocation(basicShader, "hei"), 2);
 	printOpenGLError();
 
 	glutMainLoop();

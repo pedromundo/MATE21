@@ -1,46 +1,45 @@
 #version 400
-in vec3 Position_modelspace;
-in vec3 vertNormal_modelspace;
-in vec2 vertTexCoord;
-in vec3 vertTangent_modelspace;
-in vec3 vertBinormal_modelspace;
-out vec2 fragTexCoord;
-out vec3 EyeDirection_cameraspace;
-out vec3 LightDirection_cameraspace;
-out vec3 Normal_cameraspace;
-out vec3 Position_worldspace;
-out vec3 LightDirection_tangentspace;
-out vec3 EyeDirection_tangentspace;
+in vec3 appPosition_modelspace;
+in vec3 appNormal_modelspace;
+in vec2 appTexCoord;
+in vec3 appTangent_modelspace;
+in vec3 appBinormal_modelspace;
+
+out vec2 vertTexCoord;
+out vec3 vertPosition_modelspace;
+out vec3 vertEyeDirection_cameraspace;
+out vec3 vertLightDirection_cameraspace;
+out vec3 vertNormal_cameraspace;
+out vec3 vertLightDirection_tangentspace;
+out vec3 vertEyeDirection_tangentspace;
+
 uniform mat4 MVP;
 uniform mat3 MV;
 uniform mat3 M;
 uniform vec3 lightPos;
 
 void main() {      
-	gl_Position = MVP * vec4(Position_modelspace,1);
-	Position_worldspace = (M * Position_modelspace).xyz;
-
-	vec3 Position_cameraspace = ( MV * Position_modelspace).xyz;
-	EyeDirection_cameraspace = vec3(0,0,0) - Position_cameraspace;
+	vec3 Position_cameraspace = ( MV * appPosition_modelspace).xyz;
+	vertEyeDirection_cameraspace = vec3(0,0,0) - Position_cameraspace;
 
 	// Vector that goes from the vertex to the light, in camera space. M is ommited because it's identity.
 	vec3 LightPosition_cameraspace = ( MV * lightPos).xyz;
-	LightDirection_cameraspace = LightPosition_cameraspace + EyeDirection_cameraspace;
+	vertLightDirection_cameraspace = LightPosition_cameraspace + vertEyeDirection_cameraspace;
 
 	// Normal of the the vertex, in camera space
-	Normal_cameraspace = ( MV * vertNormal_modelspace).xyz;
+	vertNormal_cameraspace = ( MV * appNormal_modelspace).xyz;
 
-	vec3 vertexTangent_cameraspace = MV * normalize(vertTangent_modelspace);
-    vec3 vertexBinormal_cameraspace = MV * normalize(vertBinormal_modelspace);
+	vec3 vertexTangent_cameraspace = MV * normalize(appTangent_modelspace);
+    vec3 vertexBinormal_cameraspace = MV * normalize(appBinormal_modelspace);
 
 	mat3 TBN = transpose(mat3(
 		vertexTangent_cameraspace,
 		vertexBinormal_cameraspace,
-		Normal_cameraspace
+		vertNormal_cameraspace
 	));
 
-	LightDirection_tangentspace = TBN * LightDirection_cameraspace;
-	EyeDirection_tangentspace =  TBN * EyeDirection_cameraspace;
-	
-    fragTexCoord = vec2(vertTexCoord.x,1-vertTexCoord.y);
+	vertPosition_modelspace = appPosition_modelspace;
+	vertLightDirection_tangentspace = TBN * vertLightDirection_cameraspace;
+	vertEyeDirection_tangentspace =  TBN * vertEyeDirection_cameraspace;	
+    vertTexCoord = vec2(appTexCoord.x,1-appTexCoord.y);
 }
