@@ -14,7 +14,7 @@ uniform sampler2D nor;
 void main() {
 	int LightPower = 100;
 	int Distance = 10;
-	vec4 LightColor = vec4(1.0,1.0,1.0,1.0);
+	vec4 LightColor = vec4(0.9,1.0,0.69,1.0);
 
     vec3 TextureNormal_tangentspace = normalize(texture( nor, gTexCoord ).rgb*2.0 - 1.0);
 
@@ -27,11 +27,12 @@ void main() {
 	float cosAlpha = clamp( dot( E,R ), 0,1 );
 
 	vec4 MaterialDiffuseColor = texture(tex,gTexCoord);
-	vec4 MaterialAmbientColor = vec4(0.1,0.1,0.1,1.0) * MaterialDiffuseColor;
+	vec4 MaterialAmbientColor = vec4(0.02,0.02,0.02,1.0) * MaterialDiffuseColor;
+	vec4 MaterialSpecularColor = vec4(1.0,1.0,1.0,1.0);
 
     vec4 color = MaterialAmbientColor +  
-	MaterialDiffuseColor * vec4(1.0,1.0,1.0,1.0) * LightPower * cosTheta / (Distance*Distance) +
-    vec4(1.0,1.0,1.0,1.0) * vec4(1.0,1.0,1.0,1.0) * LightPower * pow(cosAlpha,1000) / (Distance*Distance);
+	MaterialDiffuseColor * LightColor * LightPower * cosTheta / (Distance*Distance) +
+    MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,1000) / (Distance*Distance);
 
 
     gl_FragColor = vec4(color.rgb,1);

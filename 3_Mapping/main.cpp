@@ -285,7 +285,7 @@ GLint main(GLint argc, GLchar **argv)
 	//Setting up our MVP Matrices
 	Model = glm::mat4(1.0f);
 	View = glm::lookAt(
-		glm::vec3(0, 1, 2),
+		glm::vec3(1, 1.3, 1.0),
 		glm::vec3(0, 0, 0),
 		glm::vec3(0, 1, 0)
 		);
@@ -308,8 +308,8 @@ GLint main(GLint argc, GLchar **argv)
 
 	//Read textures from files
 	texture = SOIL_load_image("bag_tex.png", &wTex, &hTex, &cTex, SOIL_LOAD_RGB);
-	normalmap = SOIL_load_image("bag_normal.png", &wNor, &hNor, &cNor, SOIL_LOAD_RGB);
-	heightmap = SOIL_load_image("bag_dis.png", &wHei, &hHei, &cHei, SOIL_LOAD_RGB);
+	normalmap = SOIL_load_image("normal_cloth_texture.png", &wNor, &hNor, &cNor, SOIL_LOAD_RGB);
+	heightmap = SOIL_load_image("depth_cloth_texture_lighter.png", &wHei, &hHei, &cHei, SOIL_LOAD_RGB);
 
 #if defined(__linux__)
 	setenv("DISPLAY", ":0", 0);
