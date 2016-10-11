@@ -31,3 +31,10 @@ A set of tools, each with their own dependencies to reconstruct 3D models from K
 3. Run Depth2Mesh and follow and use the console interface to convert your depth image to a .xyz file
 4. Run PointProcessing and use the console window (not the openGL one) to process your point set and output an .obj file
 5. Open the generated .obj file in Meshlab and project your high-quality texture to the mesh as vertex color, generate a parametrization of the mesh with color information and then replace the generated parametrization with a properly aligned and scaled version of your high-quality texture.
+
+## Project 3 - Mapping Techniques
+This project presents a modern opengl approach to produce 3 shading effects: texture mapping, normal mapping and displacement mapping. The dependencies are:
+- freeglut
+- glew1.13
+- glm
+- SOIL
