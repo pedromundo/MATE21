@@ -23,6 +23,8 @@ uniform mat4 MVP;
 uniform mat3 MV;
 
 void main(){
+	float strength = 0.1f;
+
 	vec2 tc0 = gl_TessCoord.x * tcTexCoord[0];
     vec2 tc1 = gl_TessCoord.y * tcTexCoord[1];
     vec2 tc2 = gl_TessCoord.z * tcTexCoord[2];  
@@ -59,7 +61,7 @@ void main(){
     vec3 eyetan = normalize(et0 + et1 + et2);
 
     float height = texture(hei, teTexCoord).x;
-    pos += normal * (height * 0.1f);
+    pos += normal * (height * strength);
 
     gl_Position = MVP * vec4(pos, 1);    
     tePosition_cameraspace = MV * pos;	

@@ -27,6 +27,7 @@ GLulong nvertices, ntriangles;
 int wTex, hTex, cTex, wNor, hNor, cNor, wHei, hHei, cHei;
 //Handlers for the VBO and FBOs
 GLuint VertexArrayIDs[1], vertexbuffers[2], textureArrays[3];
+GLfloat fov = 60.0f;
 //MVP Matrices
 glm::mat4 Projection, View, Model;
 
@@ -163,6 +164,14 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y)
 	case 'R':
 		g_bRotateModel = !g_bRotateModel;
 		break;
+	case 'a':
+		fov -= 2.0f;
+		Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
+		break;
+	case 'z':
+		fov += 2.0f;
+		Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
+		break;
 	default:
 		break;
 	}
@@ -178,7 +187,7 @@ GLvoid reshape(GLint x, GLint y)
 
 GLvoid process(GLvoid){
 	if (g_bRotateModel){
-		View = glm::rotate(View, 0.01f, glm::vec3(0.0, 1.0, 0.0));
+		View = glm::rotate(View, 0.05f, glm::vec3(0.0, 1.0, 0.0));		
 	}
 }
 
@@ -289,7 +298,7 @@ GLint main(GLint argc, GLchar **argv)
 		glm::vec3(0, 0, 0),
 		glm::vec3(0, 1, 0)
 		);
-	Projection = glm::perspective(glm::radians(60.0f), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
+	Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
 
 	//Read model from .ply file	
 	p_ply ply = ply_open("bag.ply", NULL, 0, NULL);
