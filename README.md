@@ -38,6 +38,7 @@ This project presents a modern opengl approach to produce 3 shading effects: tex
 - glew1.13
 - glm
 - SOIL
+
 Several hotkeys are available:
 - a/z - to zoom in and out
 - w - change to writeframe mode
