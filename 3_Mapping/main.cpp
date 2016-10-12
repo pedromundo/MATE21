@@ -19,11 +19,7 @@ GLboolean g_bExitESC = false, g_bRotateModel = false;
 //Window Dimensions
 GLuint wWidth = 1024, wHeight = 768;
 //Shader uniforms
-<<<<<<< HEAD
 GLuint tessLevel = 20, lightDiffusePower = 100, lightSpecularPower = 10, lightDistance = 10;
-=======
-GLuint tessLevel = 20, lightDiffusePower = 100, lightSpecularPower = 10, lightDistance = 10; 
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 GLfloat displacementStrength = 0.1f;
 //# of vertices and tris
 GLulong nvertices, ntriangles;
@@ -103,11 +99,7 @@ GLvoid shaderPlumbing(){
 	glUniform3f(eyePosId, eyePos.x, eyePos.y, eyePos.z);
 	printOpenGLError();
 	//Tesselation Level
-<<<<<<< HEAD
 	GLuint tessLevelId = glGetUniformLocation(basicShader, "tessLevel");
-=======
-	GLuint tessLevelId = glGetUniformLocation(basicShader, "tessLevel");		
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 	glUniform1ui(tessLevelId, tessLevel);
 	printOpenGLError();
 	//Diffuse lighting intensity
@@ -121,11 +113,7 @@ GLvoid shaderPlumbing(){
 	//Light distance for intensity calculations
 	GLuint lightDistanceId = glGetUniformLocation(basicShader, "lightDistance");
 	glUniform1ui(lightDistanceId, lightDistance);
-<<<<<<< HEAD
 	printOpenGLError();
-=======
-	printOpenGLError();	
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 	//Displacement strength
 	GLuint displacementStrengthId = glGetUniformLocation(basicShader, "displacementStrength");
 	glUniform1f(displacementStrengthId, displacementStrength);
@@ -158,21 +146,15 @@ GLvoid shaderPlumbing(){
 
 GLvoid display(GLvoid){
 	printOpenGLError();
-<<<<<<< HEAD
 	glClearColor(0.3f, 0.3f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-=======
-	glClearColor(0.3f, 0.3f, 0.0f, 1.0f);	
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 	shaderPlumbing();
 	glDrawElements(GL_PATCHES, 3 * ntriangles, GL_UNSIGNED_INT, (void*)0);
 	printOpenGLError();
 
 	glutSwapBuffers();
 	glutPostRedisplay();
-<<<<<<< HEAD
-	
+
 	//Unbinding stuff
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -182,8 +164,6 @@ GLvoid display(GLvoid){
 	glDisableVertexAttribArray(glGetAttribLocation(basicShader, "appTexCoord"));
 	glDisableVertexAttribArray(glGetAttribLocation(basicShader, "appTangent_modelspace"));
 	glDisableVertexAttribArray(glGetAttribLocation(basicShader, "appBinormal_modelspace"));
-=======
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 }
 
 GLvoid initShaders() {
@@ -213,7 +193,7 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y)
 	case 'A':
 		fov -= 2.0f;
 		Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
-		break;	
+		break;
 	case 'z':
 		fov += 2.0f;
 		Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
@@ -257,13 +237,9 @@ GLint initGL(GLint *argc, GLchar **argv)
 {
 	glutInit(argc, argv);
 	glutIdleFunc(process);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);	
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(wWidth, wHeight);
-<<<<<<< HEAD
 	glutCreateWindow("3 - Mapping Techniques");
-=======
-	glutCreateWindow("OpenGL Viewer Scaffold");
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
@@ -273,12 +249,7 @@ GLint initGL(GLint *argc, GLchar **argv)
 	glEnable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-<<<<<<< HEAD
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	
-=======
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glPolygonMode(GL_FRONT, GL_FILL);
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 	return 1;
 }
 
@@ -367,10 +338,6 @@ GLint face_cb(p_ply_argument argument) {
 }
 
 GLvoid initTextures(){
-<<<<<<< HEAD
-=======
-
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 	//Texture data		
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureArrays[0]);
@@ -405,7 +372,6 @@ GLvoid initTextures(){
 
 }
 
-<<<<<<< HEAD
 GLvoid initVBO(){
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
 	glBufferData(GL_ARRAY_BUFFER, vertexSize*nvertices, vertices->data(), GL_STATIC_DRAW);
@@ -416,8 +382,6 @@ GLvoid initVBO(){
 	delete vertices, faces;
 }
 
-=======
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 GLint main(GLint argc, GLchar **argv)
 {
 	//Setting up our MVP Matrices
@@ -465,12 +429,10 @@ GLint main(GLint argc, GLchar **argv)
 	computeTangents();
 	initShaders();
 	initTextures();
-<<<<<<< HEAD
+
 	initVBO();
 
 	delete texture, normalmap, heightmap;
-=======
->>>>>>> ce3f4f74039a411d3a65f9097ca0854108f58d9c
 
 	glutMainLoop();
 
