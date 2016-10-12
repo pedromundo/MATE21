@@ -1,25 +1,20 @@
 #version 400
 in vec2 gTexCoord;
-in vec3 gPosition_cameraspace;
-in vec3 gEyeDirection_cameraspace;
-in vec3 gLightDirection_cameraspace;
-in vec3 gNormal_cameraspace;
 in vec3 gLightDirection_tangentspace;
 in vec3 gEyeDirection_tangentspace;
-//this is the texture
-uniform sampler2D tex; 
-uniform sampler2D nor;
+//Texture and normal
+uniform sampler2D tex, nor; 
+uniform uint lightDiffusePower, lightSpecularPower, lightDistance;
 
+out vec4 fragColor;
 
-void main() {
-	int LightPower = 100;
-	int Distance = 10;
+void main() {	
 	vec4 LightColor = vec4(1.0,1.0,1.0,1.0);
 
     vec3 TextureNormal_tangentspace = normalize(texture( nor, gTexCoord ).rgb*2.0 - 1.0);
-
 	vec3 n = normalize( TextureNormal_tangentspace );	 
 	vec3 l = normalize( gLightDirection_tangentspace );
+
 	float cosTheta = clamp( dot( n,l ), 0,1 );
 
 	vec3 E = -normalize(gEyeDirection_tangentspace);
@@ -31,8 +26,8 @@ void main() {
 	vec4 MaterialSpecularColor = vec4(1.0,1.0,1.0,1.0);
 
     vec4 color = MaterialAmbientColor +  
-	MaterialDiffuseColor * LightColor * LightPower * cosTheta / (Distance*Distance) +
-    MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,1000) / (Distance*Distance);
+	MaterialDiffuseColor * LightColor * lightDiffusePower * cosTheta / (lightDistance*lightDistance) +
+    MaterialSpecularColor * LightColor * lightSpecularPower * pow(cosAlpha,10) / (lightDistance*lightDistance);				
 
-    gl_FragColor = vec4(color.rgb,1);
+    fragColor = vec4(color.rgb,1);
 }

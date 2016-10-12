@@ -7,8 +7,6 @@ in vec3 appBinormal_modelspace;
 
 out vec2 vertTexCoord;
 out vec3 vertPosition_modelspace;
-out vec3 vertEyeDirection_cameraspace;
-out vec3 vertLightDirection_cameraspace;
 out vec3 vertNormal_cameraspace;
 out vec3 vertLightDirection_tangentspace;
 out vec3 vertEyeDirection_tangentspace;
@@ -17,10 +15,14 @@ uniform mat4 MVP;
 uniform mat3 MV;
 uniform mat3 M;
 uniform vec3 lightPos;
+uniform vec3 eyePos;
 
 void main() {      
 	vec3 Position_cameraspace = ( MV * appPosition_modelspace).xyz;
-	vertEyeDirection_cameraspace = vec3(0,0,0) - Position_cameraspace;
+	vec3 vertEyeDirection_cameraspace;
+	vec3 vertLightDirection_cameraspace;
+
+	vertEyeDirection_cameraspace = normalize(eyePos - Position_cameraspace);
 
 	// Vector that goes from the vertex to the light, in camera space. M is ommited because it's identity.
 	vec3 LightPosition_cameraspace = ( MV * lightPos).xyz;

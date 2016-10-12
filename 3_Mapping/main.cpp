@@ -7,7 +7,6 @@
 
 //My includes
 #include <SOIL.h>
-#include <map>
 #include "myDataStructures.h"
 #include "initShaders.h"
 #include "rply.h"
@@ -17,19 +16,21 @@ GLvoid reshape(GLint x, GLint y);
 
 GLboolean g_bExitESC = false, g_bRotateModel = false;
 
-//Shader Program Handle
-GLuint basicShader;
 //Window Dimensions
-GLuint wWidth = 640, wHeight = 480;
+GLuint wWidth = 1024, wHeight = 768;
+//Shader uniforms
+GLuint tessLevel = 20, lightDiffusePower = 100, lightSpecularPower = 10, lightDistance = 10; 
+GLfloat displacementStrength = 0.1f;
 //# of vertices and tris
 GLulong nvertices, ntriangles;
 //Texture properties
-int wTex, hTex, cTex, wNor, hNor, cNor, wHei, hHei, cHei;
-//Handlers for the VBO and FBOs
-GLuint VertexArrayIDs[1], vertexbuffers[2], textureArrays[3];
+GLint wTex, hTex, cTex, wNor, hNor, cNor, wHei, hHei, cHei;
+//Handlers for the VBOs, FBOs, texArrays shader programs
+GLuint VertexArrayIDs[1], vertexbuffers[2], textureArrays[3], basicShader;
 GLfloat fov = 60.0f;
 //MVP Matrices
 glm::mat4 Projection, View, Model;
+glm::vec3 eyePos = glm::vec3(1, 1.3, 1.0);
 
 //Using std::vector because no one wants to work with arrays in 2016
 std::vector<Vertex> *vertices = new std::vector<Vertex>();
@@ -39,8 +40,8 @@ GLubyte* texture;
 GLubyte* normalmap;
 GLubyte* heightmap;
 
-void computeTangentBasis(){
-	for (int i = 0; i < faces->size(); ++i){
+void computeTangents(){
+	for (GLint i = 0; i < faces->size(); ++i){
 		// Shortcuts for vertices
 		Vertex a = vertices->at(faces->at(i).f1);
 		Vertex b = vertices->at(faces->at(i).f2);
@@ -62,7 +63,7 @@ void computeTangentBasis(){
 		// UV delta
 		glm::vec2 deltaUV1 = uv1 - uv0;
 		glm::vec2 deltaUV2 = uv2 - uv0;
-		float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+		GLfloat r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
 		glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y)*r;
 		glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x)*r;
 		// Set the same tangent for all three vertices of the triangle.	
@@ -92,10 +93,33 @@ GLvoid shaderPlumbing(){
 	GLuint MId = glGetUniformLocation(basicShader, "M");
 	glUniformMatrix3fv(MId, 1, GL_FALSE, glm::value_ptr(glm::mat3(Model)));
 	printOpenGLError();
-	//Light position
-	glm::vec3 lightPos = glm::vec3(0.0, 0.5, 1.0);
+	//Eye Position
+	GLuint eyePosId = glGetUniformLocation(basicShader, "eyePos");
+	glUniform3f(eyePosId, eyePos.x, eyePos.y, eyePos.z);
+	printOpenGLError();
+	//Tesselation Level
+	GLuint tessLevelId = glGetUniformLocation(basicShader, "tessLevel");		
+	glUniform1ui(tessLevelId, tessLevel);
+	printOpenGLError();
+	//Diffuse lighting intensity
+	GLuint lightDiffusePowerId = glGetUniformLocation(basicShader, "lightDiffusePower");
+	glUniform1ui(lightDiffusePowerId, lightDiffusePower);
+	printOpenGLError();
+	//Specular lighting intensity
+	GLuint lightSpecularPowerId = glGetUniformLocation(basicShader, "lightSpecularPower");
+	glUniform1ui(lightSpecularPowerId, lightSpecularPower);
+	printOpenGLError();
+	//Light distance for intensity calculations
+	GLuint lightDistanceId = glGetUniformLocation(basicShader, "lightDistance");
+	glUniform1ui(lightDistanceId, lightDistance);
+	printOpenGLError();	
+	//Displacement strength
+	GLuint displacementStrengthId = glGetUniformLocation(basicShader, "displacementStrength");
+	glUniform1f(displacementStrengthId, displacementStrength);
+	printOpenGLError();
+	//Light position	
 	GLuint lightID = glGetUniformLocation(basicShader, "lightPos");
-	glUniform3f(lightID, lightPos.x, lightPos.y, lightPos.z);
+	glUniform3f(lightID, eyePos.x, eyePos.y, eyePos.z);
 	printOpenGLError();
 
 	std::size_t vertexSize = (3 * sizeof(GLfloat) + 3 * sizeof(GLfloat) + 2 * sizeof(GLfloat) + 2 * sizeof(glm::vec3));
@@ -124,21 +148,14 @@ GLvoid shaderPlumbing(){
 
 GLvoid display(GLvoid){
 	printOpenGLError();
-	glClearColor(0.3f, 0.3f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_POINT_SMOOTH);
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glClearColor(0.3f, 0.3f, 0.0f, 1.0f);	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 	shaderPlumbing();
-
 	glDrawElements(GL_PATCHES, 3 * ntriangles, GL_UNSIGNED_INT, (void*)0);
 	printOpenGLError();
 
-	glutSwapBuffers();	
-	glutPostRedisplay();	
+	glutSwapBuffers();
+	glutPostRedisplay();
 }
 
 GLvoid initShaders() {
@@ -165,12 +182,29 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y)
 		g_bRotateModel = !g_bRotateModel;
 		break;
 	case 'a':
+	case 'A':
 		fov -= 2.0f;
 		Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
-		break;
+		break;	
 	case 'z':
 		fov += 2.0f;
 		Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
+		break;
+	case 'w':
+	case 'W':
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		break;
+	case 'p':
+	case 'P':
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		break;
+	case '-':
+	case '_':
+		--tessLevel;
+		break;
+	case '=':
+	case '+':
+		++tessLevel;
 		break;
 	default:
 		break;
@@ -187,7 +221,7 @@ GLvoid reshape(GLint x, GLint y)
 
 GLvoid process(GLvoid){
 	if (g_bRotateModel){
-		View = glm::rotate(View, 0.05f, glm::vec3(0.0, 1.0, 0.0));		
+		View = glm::rotate(View, 0.05f, glm::vec3(0.0, 0.5, 0.0));
 	}
 }
 
@@ -195,13 +229,20 @@ GLint initGL(GLint *argc, GLchar **argv)
 {
 	glutInit(argc, argv);
 	glutIdleFunc(process);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);	
 	glutInitWindowSize(wWidth, wHeight);
-	glutCreateWindow("OpenGL Viewer Scaffold");	
+	glutCreateWindow("OpenGL Viewer Scaffold");
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
 	glewInit();
+	glEnable(GL_POINT_SMOOTH);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glPolygonMode(GL_FRONT, GL_FILL);
 	return 1;
 }
 
@@ -212,7 +253,7 @@ inline GLfloat interpolate(const GLfloat a, const GLfloat b, const GLfloat coeff
 
 Vertex tempPoint = { 0.0f, 0.0f, 0.0f };
 
-int vertex_cb(p_ply_argument argument) {
+GLint vertex_cb(p_ply_argument argument) {
 	long currItem;
 	ply_get_argument_user_data(argument, NULL, &currItem);
 	switch (currItem){
@@ -242,7 +283,7 @@ int vertex_cb(p_ply_argument argument) {
 }
 
 Face tempFace;
-int face_cb(p_ply_argument argument) {
+GLint face_cb(p_ply_argument argument) {
 	long length, value_index, currItem;
 	ply_get_argument_property(argument, NULL, &length, &value_index);
 	ply_get_argument_user_data(argument, NULL, &currItem);
@@ -289,13 +330,49 @@ int face_cb(p_ply_argument argument) {
 	return 1;
 }
 
+GLvoid initTextures(){
+
+	//Texture data		
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureArrays[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wTex, hTex, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+	glUniform1i(glGetUniformLocation(basicShader, "tex"), 0);
+
+	//Normal data
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, textureArrays[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wNor, hNor, 0, GL_RGB, GL_UNSIGNED_BYTE, normalmap);
+	glUniform1i(glGetUniformLocation(basicShader, "nor"), 1);
+	printOpenGLError();
+
+	//Height data
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, textureArrays[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wHei, hHei, 0, GL_RGB, GL_UNSIGNED_BYTE, heightmap);
+	glUniform1i(glGetUniformLocation(basicShader, "hei"), 2);
+	printOpenGLError();
+
+}
+
 GLint main(GLint argc, GLchar **argv)
 {
 	//Setting up our MVP Matrices
 	Model = glm::mat4(1.0f);
 	View = glm::lookAt(
-		glm::vec3(1, 1.3, 1.0),
-		glm::vec3(0, 0, 0),
+		eyePos,
+		glm::vec3(0, 0.5, 0),
 		glm::vec3(0, 1, 0)
 		);
 	Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
@@ -333,40 +410,9 @@ GLint main(GLint argc, GLchar **argv)
 	glGenBuffers(2, vertexbuffers);
 	glGenTextures(3, textureArrays);
 
-	computeTangentBasis();
+	computeTangents();
 	initShaders();
-
-	//Texture data		
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureArrays[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wTex, hTex, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
-	glUniform1i(glGetUniformLocation(basicShader, "tex"), 0);
-
-	//Normal data
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, textureArrays[1]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wNor, hNor, 0, GL_RGB, GL_UNSIGNED_BYTE, normalmap);
-	glUniform1i(glGetUniformLocation(basicShader, "nor"), 1);
-	printOpenGLError();
-
-	//Height data
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, textureArrays[2]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wHei, hHei, 0, GL_RGB, GL_UNSIGNED_BYTE, heightmap);
-	glUniform1i(glGetUniformLocation(basicShader, "hei"), 2);
-	printOpenGLError();
+	initTextures();
 
 	glutMainLoop();
 
