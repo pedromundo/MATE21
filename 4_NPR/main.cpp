@@ -215,6 +215,7 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y)
 		Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
 		break;
 	case 'z':
+	case 'Z':
 		fov += 2.0f;
 		Projection = glm::perspective(glm::radians(fov), (GLfloat)wWidth / (GLfloat)wHeight, 0.1f, 100.0f);
 		break;
@@ -233,6 +234,14 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y)
 	case '=':
 	case '+':
 		++tessLevel;
+		break;
+	case 's':
+	case 'S':
+		displacementStrength += 0.01;
+		break;
+	case 'x':
+	case 'X':
+		displacementStrength -= 0.01;
 		break;
 	default:
 		break;
