@@ -19,8 +19,9 @@ GLboolean g_bExitESC = false, g_bRotateModel = false;
 //Window Dimensions
 GLuint wWidth = 1024, wHeight = 768;
 //Shader uniforms
-GLuint tessLevel = 20, lightDiffusePower = 100, lightSpecularPower = 10, lightDistance = 10;
+GLuint tessLevel = 20, lightDiffusePower = 100, lightSpecularPower = 10, lightDistance = 10, shaderOption = 0;
 GLfloat displacementStrength = 0.1f;
+GLboolean binarize = false;
 //# of vertices and tris
 GLulong nvertices, ntriangles;
 //Texture properties
@@ -133,6 +134,12 @@ GLvoid celShaderPlumbing(){
 	//Light position	
 	GLuint lightID = glGetUniformLocation(celShader, "lightPos");
 	glUniform3f(lightID, eyePos.x, eyePos.y, eyePos.z);
+	//Binarization	
+	GLuint binarizeID = glGetUniformLocation(celShader, "binarize");
+	glUniform1i(binarizeID, binarize);
+	//Shader option
+	GLuint optionID = glGetUniformLocation(celShader, "shaderOption");
+	glUniform1ui(optionID, shaderOption);
 	printOpenGLError();
 
 	//Vertex attributes
@@ -204,6 +211,15 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y)
 		glutDestroyWindow(glutGetWindow());
 		return;
 #endif
+		break;
+	case 'c':
+	case 'C':
+		if (++shaderOption > 4)
+			shaderOption = 0;
+		break;
+	case 'b':
+	case 'B':
+		binarize = !binarize;
 		break;
 	case 'r':
 	case 'R':

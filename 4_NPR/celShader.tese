@@ -4,19 +4,14 @@ layout(triangles, equal_spacing, ccw) in;
 
 in vec2 tcTexCoord[];
 in vec3 tcPosition_modelspace[];
-/*in vec3 tcEyeDirection_cameraspace[];
-in vec3 tcLightDirection_cameraspace[];*/
 in vec3 tcNormal_cameraspace[];
 in vec3 tcLightDirection_tangentspace[];
 in vec3 tcEyeDirection_tangentspace[];
 
 out vec2 teTexCoord;
-out vec3 tePosition_cameraspace;
-/*out vec3 teEyeDirection_cameraspace;
-out vec3 teLightDirection_cameraspace;*/
-out vec3 teNormal_cameraspace;
 out vec3 teLightDirection_tangentspace;
 out vec3 teEyeDirection_tangentspace;
+out vec4 tePosition_clipspace;
 
 uniform sampler2D hei;
 uniform mat4 MVP;
@@ -53,8 +48,7 @@ void main(){
     pos += (normal * inverse(transpose(MV))) * (height * displacementStrength);
 
     gl_Position = MVP * vec4(pos, 1);    
-    tePosition_cameraspace = MV * pos;		
-	teNormal_cameraspace = normal;
+	tePosition_clipspace = gl_Position;    
 	teLightDirection_tangentspace = lighttan;
 	teEyeDirection_tangentspace = eyetan;
 }
