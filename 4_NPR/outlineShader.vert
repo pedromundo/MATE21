@@ -7,7 +7,7 @@ out vec4 vertColor;
 uniform mat4 MVP;
 
 void main() {      
-	 gl_Position = (MVP * vec4(appPosition_modelspace,1.0)) + (MVP * vec4(appNormal_modelspace,1.0)) * 0.015;
+	 gl_Position = (MVP * vec4(appPosition_modelspace,1.0)) + (MVP * vec4(appNormal_modelspace,1.0)) * 0.01;
 	 vertColor = vec4(0,0,0,1.0);
-	 //vertColor = vec4(0.055,0.29,0.573,1.0);
+	 //vertColor = vec4(0.055,0.8,1.0,1.0);
 }

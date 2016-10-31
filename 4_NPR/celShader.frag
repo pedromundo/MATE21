@@ -53,11 +53,11 @@ void main() {
 		MaterialDiffuseColor = vec4((0.2126 * MaterialDiffuseColor.r + 0.7152 * MaterialDiffuseColor.g + 0.0722 * MaterialDiffuseColor.b)>0.18?1.0:0.0);
 	}
 
+	MaterialDiffuseColor *= 2;
+
     vec4 color = MaterialAmbientColor +  
 	MaterialDiffuseColor * LightColor * lightDiffusePower * cosTheta / (lightDistance*lightDistance) +
     MaterialSpecularColor * LightColor * lightSpecularPower * pow(cosAlpha,10) / (lightDistance*lightDistance);
-
-	color = vec4(color.xyz*2,1);
 
 	float physicalIntensity = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
 
